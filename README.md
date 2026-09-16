@@ -4,29 +4,9 @@ A self-hosted **token-injecting HTTP reverse proxy** — configure an API
 integration once, get a stable subdomain that injects your credentials
 automatically.
 
-## Inspiration
-
-- **[exe.dev](https://exe.dev)** — the developer experience that made this
-  feel inevitable: a stable subdomain, credentials handled, nothing to
-  configure per call. Hodor is the self-hosted version of that idea.
-- **[executor.sh](https://executor.sh)** and
-  **[integrations.sh](https://integrations.sh)** — helped shape the catalog
-  and the registry model: integrations you configure once, then point any
-  caller at.
-
 ## Deploy to Cloudflare
 
-One worker does all the work; a second worker just hosts the docs site.
-
-| Kind              | Name                   | Purpose                                                                               |
-| ----------------- | ---------------------- | ------------------------------------------------------------------------------------- |
-| KV namespace      | `HODOR_KV`             | encrypted secrets + registry                                                          |
-| Secret (required) | `HODOR_ENCRYPTION_KEY` | AES-GCM master key (`openssl rand -base64 32`)                                        |
-| Secret (required) | `HODOR_JWT_SECRET`     | signs minted API keys (`openssl rand -hex 32`)                                        |
-| Var               | `HODOR_APP_URL`        | main/apex host (the control surface — `/_/admin`, `/_/reflection` — serves here only) |
-| Analytics Engine  | `HODOR_ANALYTICS`      | audit traffic log (`hodor_traffic`)                                                   |
-
-### One-click
+### Installation
 
 The button creates a **private repo from a snapshot** of the app (not a fork)
 and deploys it — your bindings, secrets and settings stay in your own copy.
@@ -53,6 +33,16 @@ orange-clouded. `192.0.2.0` is a dummy RFC-5737 address; the worker route
 does the real routing, and worker routes don't create DNS records. First-level
 wildcards are covered by Universal SSL — no custom cert. (Custom domains only
 support single hosts, fine for the `hodor.ing` apex.)
+
+One worker does all the work; a second worker just hosts the docs site.
+
+| Kind              | Name                   | Purpose                                                                               |
+| ----------------- | ---------------------- | ------------------------------------------------------------------------------------- |
+| KV namespace      | `HODOR_KV`             | encrypted secrets + registry                                                          |
+| Secret (required) | `HODOR_ENCRYPTION_KEY` | AES-GCM master key (`openssl rand -base64 32`)                                        |
+| Secret (required) | `HODOR_JWT_SECRET`     | signs minted API keys (`openssl rand -hex 32`)                                        |
+| Var               | `HODOR_APP_URL`        | main/apex host (the control surface — `/_/admin`, `/_/reflection` — serves here only) |
+| Analytics Engine  | `HODOR_ANALYTICS`      | audit traffic log (`hodor_traffic`)                                                   |
 
 ## Usage
 
@@ -203,19 +193,19 @@ first. Two ways:
    npx wrangler deploy
    ```
 
-## Releases
-
-Cut a release whenever the code you want deployed has landed on `main`:
-
-```bash
-git tag v0.1.1
-git push origin v0.1.1
-gh release create v0.1.1 --generate-notes --title "Hodor v0.1.1"
-```
-
-## Hacking on hodor
+## Contributing to hodor
 
 Repo layout, commands, and conventions live in [`AGENTS.md`](./AGENTS.md).
+
+## Inspiration
+
+- **[exe.dev](https://exe.dev)** — the developer experience that made this
+  feel inevitable: a stable subdomain, credentials handled, nothing to
+  configure per call. Hodor is the self-hosted version of that idea.
+- **[executor.sh](https://executor.sh)** and
+  **[integrations.sh](https://integrations.sh)** — helped shape the catalog
+  and the registry model: integrations you configure once, then point any
+  caller at.
 
 ## Philosophy
 
