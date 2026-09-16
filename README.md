@@ -36,7 +36,8 @@ namespace id), and the two required secrets are captured on the setup page
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/butttons/hodor/tree/main/apps/proxy-worker)
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/butttons/hodor/tree/main/apps/docs-worker)
+(Want your own copy of the docs site too? Same button flow from
+`apps/docs-worker` — optional, most people only need the proxy.)
 
 ### Manual
 
