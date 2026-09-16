@@ -1,0 +1,22 @@
+{
+  "id": "linear",
+  "url": {
+    "host": "api.linear.app"
+  },
+  "headers": {
+    "Authorization": "kv('LINEAR_API_KEY')"
+  },
+  "meta": {
+    "label": "Linear",
+    "description": "Issue tracking and planning for software teams",
+    "docs": "https://developers.linear.app/docs",
+    "llms": "https://docs.linear.app/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=linear.app&sz=128",
+    "openapi": "https://developers.linear.app/openapi.json",
+    "note": "Key goes in raw, no Bearer prefix. GraphQL at /graphql; probe with { viewer { id } }."
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/graphql"
+  }
+}

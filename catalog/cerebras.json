@@ -1,0 +1,20 @@
+{
+  "id": "cerebras",
+  "url": {
+    "host": "api.cerebras.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('CEREBRAS_API_KEY')"
+  },
+  "meta": {
+    "label": "Cerebras",
+    "description": "Ultra-fast LLM inference on wafer-scale hardware",
+    "docs": "https://inference-docs.cerebras.ai/api-reference",
+    "llms": "https://inference-docs.cerebras.ai/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=cerebras.ai&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/models"
+  }
+}

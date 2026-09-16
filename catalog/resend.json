@@ -1,0 +1,20 @@
+{
+  "id": "resend",
+  "url": {
+    "host": "api.resend.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('RESEND_API_KEY')"
+  },
+  "meta": {
+    "label": "Resend",
+    "description": "Developer-first transactional email",
+    "docs": "https://resend.com/docs",
+    "icon": "https://www.google.com/s2/favicons?domain=resend.com&sz=128",
+    "llms": "https://resend.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/domains"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "sentry",
+  "url": {
+    "host": "sentry.io"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('SENTRY_AUTH_TOKEN')"
+  },
+  "meta": {
+    "label": "Sentry",
+    "description": "Error tracking and performance monitoring",
+    "docs": "https://docs.sentry.io/api/",
+    "llms": "https://docs.sentry.io/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=sentry.io&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/0/organizations/"
+  }
+}

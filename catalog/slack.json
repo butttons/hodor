@@ -1,0 +1,23 @@
+{
+  "id": "slack",
+  "url": {
+    "host": "slack.com",
+    "path": "/api"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('SLACK_BOT_TOKEN')"
+  },
+  "meta": {
+    "label": "Slack",
+    "description": "Slack Web API (bot or user token)",
+    "docs": "https://docs.slack.dev/apis/web-api/",
+    "llms": "https://docs.slack.dev/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=slack.com&sz=128",
+    "openapi": "https://raw.githubusercontent.com/slackapi/slack-api-specs/master/web-api/slack_web_openapi_v2.json",
+    "note": "Send Content-Type: application/json. Failures hide in HTTP 200 {\"ok\":false} \u2014 read the body."
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/auth.test"
+  }
+}

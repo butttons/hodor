@@ -1,0 +1,21 @@
+{
+  "id": "instagram",
+  "url": {
+    "host": "graph.instagram.com"
+  },
+  "headers": {},
+  "query": {
+    "access_token": "kv('INSTAGRAM_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Instagram",
+    "description": "Instagram Graph API",
+    "docs": "https://developers.facebook.com/docs/instagram-platform",
+    "llms": "https://developers.facebook.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=instagram.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v22.0/me"
+  }
+}

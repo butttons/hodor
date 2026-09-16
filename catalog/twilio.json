@@ -1,0 +1,21 @@
+{
+  "id": "twilio",
+  "url": {
+    "host": "api.twilio.com",
+    "path": "/2010-04-01"
+  },
+  "headers": {
+    "Authorization": "'Basic ' + base64(kv('TWILIO_ACCOUNT_SID') + ':' + kv('TWILIO_AUTH_TOKEN'))"
+  },
+  "meta": {
+    "label": "Twilio",
+    "description": "Programmable SMS, voice, and messaging",
+    "docs": "https://www.twilio.com/docs/usage/api",
+    "icon": "https://www.google.com/s2/favicons?domain=twilio.com&sz=128",
+    "llms": "https://www.twilio.com/docs/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/Accounts.json"
+  }
+}

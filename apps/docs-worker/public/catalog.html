@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalog — hodor</title>
+    <meta
+      name="description"
+      content="Every integration hodor knows out of the box — browse and search the catalog, then register any of them on your instance with one PATCH."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="canonical" href="https://hodor.ing/catalog" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Catalog — hodor" />
+    <meta
+      property="og:description"
+      content="Every integration hodor knows out of the box — browse, search, register."
+    />
+    <meta property="og:url" content="https://hodor.ing/catalog" />
+    <meta property="og:image" content="https://hodor.ing/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hodor.ing/og.png" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+    <style>
+      :root {
+        --bg: #000000;
+        --bg-soft: #0a0a0a;
+        --bg-code: #101010;
+        --fg: #f5f5f5;
+        --fg-muted: #9a9a9a;
+        --fg-dim: #6b6b6b;
+        --line: #232323;
+        --accent: #ffb454;
+        --font-display:
+          "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      /* Slim, theme-matched scrollbars everywhere (native CSS). */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--line) transparent;
+      }
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--line);
+        border-radius: 6px;
+        border: 2px solid var(--bg);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--fg-dim);
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 72px;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      ::selection {
+        background: var(--accent);
+        color: #000;
+      }
+      a {
+        color: var(--fg);
+        text-decoration: none;
+      }
+      a:hover {
+        color: var(--accent);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 28px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .brand {
+        font-weight: 700;
+        font-size: 17px;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+        text-decoration: none;
+        font-family: var(--font-display);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        white-space: nowrap;
+      }
+      .brand:hover {
+        text-decoration: none;
+      }
+      .brand img {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: block;
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 14px;
+      }
+      nav a[aria-current] {
+        color: var(--accent);
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 56px 28px 72px;
+      }
+      h1 {
+        margin: 0;
+        font: 700 40px var(--font-display);
+        letter-spacing: -0.02em;
+      }
+      .lead {
+        max-width: 640px;
+        color: var(--fg-muted);
+        margin: 14px 0 34px;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 18px;
+        background: var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        margin-bottom: 18px;
+      }
+      .search:focus-within {
+        border-color: var(--accent);
+      }
+      .search input {
+        flex: 1;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--fg);
+        font: 500 17px var(--font-display);
+      }
+      .search input::placeholder {
+        color: var(--fg-dim);
+      }
+      .count {
+        color: var(--fg-dim);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: -4px 0 18px;
+        flex-wrap: wrap;
+      }
+      .domain {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--fg-dim);
+        font-size: 13px;
+        white-space: nowrap;
+        flex: 1 1 200px;
+        min-width: 0;
+      }
+      .domain input {
+        flex: 1;
+        min-width: 0;
+        max-width: 230px;
+        background: var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--fg);
+        font:
+          500 13.5px ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        outline: none;
+      }
+      .domain input:focus {
+        border-color: var(--accent);
+      }
+      .btn {
+        font: 600 13px var(--font-display);
+        color: var(--fg-muted);
+        background: transparent;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px 14px;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .btn:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .btn.copy {
+        padding: 4px 10px;
+        font-size: 12px;
+      }
+      #rawbox {
+        margin-bottom: 18px;
+      }
+      #rawbox pre {
+        margin: 0;
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        max-height: 420px;
+        overflow: auto;
+        font:
+          12px/1.6 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: var(--fg-muted);
+      }
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent);
+        color: #000;
+        font: 600 13px var(--font-display);
+        padding: 8px 16px;
+        border-radius: 8px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 50;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 22px 20px;
+        background: var(--bg-soft);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        min-width: 0;
+      }
+      .card .top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .card .icon {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        flex: none;
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        object-fit: contain;
+      }
+      .card h2 {
+        margin: 0;
+        font: 600 15px var(--font-display);
+        letter-spacing: -0.01em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .card .desc {
+        color: var(--fg-muted);
+        font-size: 14px;
+        line-height: 1.55;
+        margin: 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .card .url {
+        font:
+          12px/1.5 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: var(--fg-dim);
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .card .kv {
+        display: grid;
+        grid-template-columns: 130px 1fr;
+        gap: 4px 14px;
+        padding: 4px 0;
+        font-size: 12.5px;
+        min-width: 0;
+      }
+      .card .kv .k {
+        color: var(--fg-dim);
+      }
+      .card .kv .v {
+        color: var(--fg-muted);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .card .raw {
+        margin: 0;
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        max-height: 220px;
+        overflow: auto;
+        font:
+          11.5px/1.6 ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: var(--fg-muted);
+      }
+      .card .ctl {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+        border-top: 1px solid var(--line);
+        margin-top: auto;
+        padding-top: 10px;
+      }
+      .card .badges {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font: 600 11.5px var(--font-display);
+        color: var(--fg-muted);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 11px;
+        text-decoration: none;
+      }
+      .badge:hover {
+        color: var(--accent);
+        border-color: var(--accent);
+      }
+      .badge i.ph {
+        font-size: 13px;
+      }
+      .card .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .card .btn i.ph {
+        font-size: 14px;
+      }
+      .empty {
+        display: none;
+        padding: 48px 0;
+        text-align: center;
+        color: var(--fg-dim);
+      }
+      footer {
+        border-top: 1px solid var(--line);
+        padding: 18px 28px;
+      }
+      .foot {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        color: var(--fg-dim);
+        font-size: 13.5px;
+      }
+      @media (max-width: 900px) {
+        header {
+          padding: 12px 16px;
+        }
+        nav {
+          gap: 14px;
+          font-size: 13.5px;
+        }
+        main {
+          padding: 36px 16px 56px;
+        }
+        h1 {
+          font-size: 30px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .card .kv {
+          grid-template-columns: 25% 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">
+        <img class="logo" src="/logo_32.png" alt="hodor logo" />
+        hodor
+      </a>
+      <nav>
+        <a href="/catalog" aria-current="page">Catalog</a>
+        <a href="/llms.txt">llms.txt</a>
+        <a href="https://github.com/butttons/hodor" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <h1>Integration catalog</h1>
+      <p class="lead">
+        Every integration hodor knows out of the box. Set your instance domain and copy the
+        <b>curl</b> for any card — it registers the integration on your instance with one
+        <code>PATCH /_/admin/registry/:id</code>. Your URL, your credentials, injected
+        automatically.
+      </p>
+
+      <div class="search">
+        <input
+          id="q"
+          type="search"
+          placeholder="Search integrations… e.g. slack, analytics, logs, ai"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span class="count" id="count"></span>
+      </div>
+
+      <div class="toolbar">
+        <label class="domain">
+          Your instance domain
+          <input
+            id="domain"
+            type="text"
+            value="example.com"
+            placeholder="your-instance.example.com"
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </label>
+        <button class="btn" id="copyAll" type="button">Copy catalog JSON</button>
+        <button class="btn" id="toggleRaw" type="button">View JSON</button>
+        <a class="btn" href="/catalog.json" target="_blank" rel="noopener">raw ↗</a>
+      </div>
+
+      <div id="rawbox" hidden>
+        <pre id="rawpre"></pre>
+      </div>
+
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty">No integrations match — try a broader term.</div>
+    </main>
+
+    <footer>
+      <div class="foot">
+        <span>© 2026 Yash</span>
+        <span>
+          <a href="/llms.txt">llms.txt</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/butttons/hodor" target="_blank" rel="noopener">GitHub</a>
+        </span>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const input = document.getElementById("q");
+      const grid = document.getElementById("grid");
+      const empty = document.getElementById("empty");
+      const count = document.getElementById("count");
+      const domainInput = document.getElementById("domain");
+      let timer;
+      let toastTimer;
+      let LAST = [];
+
+      function esc(s) {
+        return s.replace(
+          /[&<>"']/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c],
+        );
+      }
+
+      function toast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => t.classList.remove("show"), 1400);
+      }
+
+      function normDomain(v) {
+        let d = (v || "")
+          .trim()
+          .replace(/^https?:\/\//i, "")
+          .replace(/\/.*$/, "")
+          .trim();
+        return d || "example.com";
+      }
+
+      function curlFor(item) {
+        const dom = normDomain(domainInput.value);
+        return (
+          "curl -X PATCH https://" +
+          dom +
+          "/_/admin/registry/" +
+          item.id +
+          " \\\n" +
+          '  -H "X-Authorization: Bearer $TOKEN" \\\n' +
+          "  -H 'content-type: application/json' \\\n" +
+          "  --data-binary @- <<'JSON'\n" +
+          JSON.stringify(item.raw, null, 2) +
+          "\nJSON"
+        );
+      }
+
+      async function copyText(s) {
+        try {
+          await navigator.clipboard.writeText(s);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = s;
+          document.body.appendChild(ta);
+          ta.select();
+          try {
+            document.execCommand("copy");
+          } catch {
+            /* noop */
+          }
+          ta.remove();
+        }
+      }
+
+      async function search(q) {
+        const res = await fetch("/catalog/search?q=" + encodeURIComponent(q));
+        const data = await res.json();
+        empty.style.display = data.total === 0 ? "block" : "none";
+        count.textContent = q ? data.total + " of " + data.count : data.count + " integrations";
+        LAST = data.items;
+        grid.innerHTML = data.items
+          .map((it, i) => {
+            const icon = it.icon
+              ? '<img class="icon" loading="lazy" src="' +
+                esc(it.icon) +
+                '" alt="" onerror="this.style.display=&quot;none&quot;" />'
+              : '<span class="icon"></span>';
+            const url = "https://" + esc(it.host) + esc(it.path);
+            const rows = [];
+            if (it.headers && it.headers.length) rows.push(["Injects", esc(it.headers.join(", "))]);
+            if (it.secrets && it.secrets.length) rows.push(["Needs", esc(it.secrets.join(", "))]);
+            if (it.variables && it.variables.length)
+              rows.push(["Params", esc(it.variables.join(" · "))]);
+            if (it.probe) rows.push(["Probe", esc(it.probe.method + " " + it.probe.path)]);
+            const badges = [];
+            if (it.docs)
+              badges.push(
+                '<a class="badge" href="' +
+                  esc(it.docs) +
+                  '" target="_blank" rel="noopener"><i class="ph ph-book-open"></i>Docs</a>',
+              );
+            if (it.llms)
+              badges.push(
+                '<a class="badge" href="' +
+                  esc(it.llms) +
+                  '" target="_blank" rel="noopener"><i class="ph ph-robot"></i>LLMs</a>',
+              );
+            if (it.openapi)
+              badges.push(
+                '<a class="badge" href="' +
+                  esc(it.openapi) +
+                  '" target="_blank" rel="noopener"><i class="ph ph-brackets-curly"></i>OpenAPI</a>',
+              );
+            if (badges.length)
+              rows.push(["Docs", '<span class="badges">' + badges.join("") + "</span>"]);
+            const kv =
+              '<div class="kv">' +
+              rows
+                .map(([k, v]) => '<span class="k">' + k + '</span><span class="v">' + v + "</span>")
+                .join("") +
+              "</div>";
+            const actions =
+              '<button class="btn copy" data-idx="' +
+              i +
+              '" data-kind="view" type="button" aria-expanded="false"><i class="ph ph-eye"></i><span class="lbl">view JSON</span></button>' +
+              '<button class="btn copy" data-idx="' +
+              i +
+              '" data-kind="curl" type="button"><i class="ph ph-terminal"></i>copy curl</button>' +
+              '<button class="btn copy" data-idx="' +
+              i +
+              '" data-kind="json" type="button"><i class="ph ph-brackets-curly"></i>JSON</button>';
+            const ctl = '<div class="ctl">' + actions + "</div>";
+            return (
+              '<div class="card"><div class="top">' +
+              icon +
+              "<h2>" +
+              esc(it.label) +
+              "</h2></div>" +
+              '<p class="desc">' +
+              esc(it.description) +
+              "</p>" +
+              '<div class="url">' +
+              esc(url) +
+              "</div>" +
+              kv +
+              ctl +
+              '<pre class="raw" hidden></pre>' +
+              "</div>"
+            );
+          })
+          .join("");
+        grid.querySelectorAll(".copy").forEach((b) =>
+          b.addEventListener("click", () => {
+            const item = LAST[+b.dataset.idx];
+            if (!item) return;
+            if (b.dataset.kind === "view") {
+              const card = b.closest(".card");
+              const pre = card.querySelector(".raw");
+              if (pre.hidden) {
+                pre.textContent = JSON.stringify(item.raw, null, 2);
+                pre.hidden = false;
+                b.setAttribute("aria-expanded", "true");
+                b.querySelector(".ph").className = "ph ph-eye-slash";
+                b.querySelector(".lbl").textContent = "hide JSON";
+              } else {
+                pre.hidden = true;
+                b.setAttribute("aria-expanded", "false");
+                b.querySelector(".ph").className = "ph ph-eye";
+                b.querySelector(".lbl").textContent = "view JSON";
+              }
+              return;
+            }
+            if (b.dataset.kind === "json") {
+              copyText(JSON.stringify(item.raw, null, 2)).then(() =>
+                toast("Copied " + item.id + " JSON"),
+              );
+            } else {
+              copyText(curlFor(item)).then(() => toast("Copied curl for " + item.id));
+            }
+          }),
+        );
+      }
+
+      input.addEventListener("input", () => {
+        clearTimeout(timer);
+        const q = input.value;
+        timer = setTimeout(() => search(q), 150);
+      });
+
+      document.getElementById("copyAll").addEventListener("click", async () => {
+        const res = await fetch("/catalog.json");
+        await copyText(await res.text());
+        toast("Copied catalog JSON");
+      });
+
+      const rawbox = document.getElementById("rawbox");
+      const toggleRaw = document.getElementById("toggleRaw");
+      toggleRaw.addEventListener("click", async () => {
+        if (!rawbox.hidden) {
+          rawbox.hidden = true;
+          toggleRaw.textContent = "View JSON";
+          return;
+        }
+        const res = await fetch("/catalog.json");
+        document.getElementById("rawpre").textContent = await res.text();
+        rawbox.hidden = false;
+        toggleRaw.textContent = "Hide JSON";
+      });
+
+      search("");
+    </script>
+  </body>
+</html>

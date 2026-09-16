@@ -1,0 +1,19 @@
+{
+  "id": "airtable",
+  "url": {
+    "host": "api.airtable.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('AIRTABLE_API_KEY')"
+  },
+  "meta": {
+    "label": "Airtable",
+    "description": "Airtable Bases API — records, tables, and bases",
+    "docs": "https://airtable.com/developers/web/api/introduction",
+    "icon": "https://www.google.com/s2/favicons?domain=airtable.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v0/meta/bases"
+  }
+}

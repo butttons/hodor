@@ -1,0 +1,21 @@
+{
+  "id": "openweather",
+  "url": {
+    "host": "api.openweathermap.org"
+  },
+  "headers": {},
+  "meta": {
+    "label": "OpenWeather",
+    "description": "Current weather and forecasts worldwide",
+    "docs": "https://openweathermap.org/api",
+    "icon": "https://www.google.com/s2/favicons?domain=openweathermap.org&sz=128",
+    "llms": "https://openweathermap.org/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/data/2.5/weather?q=London"
+  },
+  "query": {
+    "appid": "kv('OPENWEATHER_API_KEY')"
+  }
+}

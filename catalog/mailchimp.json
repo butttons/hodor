@@ -1,0 +1,25 @@
+{
+  "id": "mailchimp",
+  "url": {
+    "host": "<dc>.api.mailchimp.com",
+    "path": "/3.0"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('MAILCHIMP_API_KEY')"
+  },
+  "meta": {
+    "label": "Mailchimp",
+    "description": "Mailchimp email marketing API",
+    "docs": "https://mailchimp.com/developer/marketing/api/",
+    "llms": "https://mailchimp.com/developer/llms.txt",
+    "openapi": "https://mailchimp.com/developer/openapi.json",
+    "icon": "https://www.google.com/s2/favicons?domain=mailchimp.com&sz=128"
+  },
+  "variables": {
+    "dc": "Data center for your Mailchimp account (e.g. us1, us2, eu1) \u2014 found in API key after the dash"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/ping"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "honeycomb",
+  "url": {
+    "host": "api.honeycomb.io"
+  },
+  "headers": {
+    "X-Honeycomb-Team": "kv('HONEYCOMB_API_KEY')"
+  },
+  "meta": {
+    "label": "Honeycomb",
+    "description": "Observability for distributed systems and tracing",
+    "docs": "https://docs.honeycomb.io/api/",
+    "llms": "https://docs.honeycomb.io/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=honeycomb.io&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/1/auth"
+  }
+}

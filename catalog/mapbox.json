@@ -1,0 +1,21 @@
+{
+  "id": "mapbox",
+  "url": {
+    "host": "api.mapbox.com"
+  },
+  "headers": {},
+  "meta": {
+    "label": "Mapbox",
+    "description": "Geocoding, directions, places, and maps data",
+    "docs": "https://docs.mapbox.com/api/",
+    "llms": "https://docs.mapbox.com/api/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=mapbox.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/geocoding/v5/mapbox.places/Los%20Angeles.json"
+  },
+  "query": {
+    "access_token": "kv('MAPBOX_API_KEY')"
+  }
+}

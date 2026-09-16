@@ -1,0 +1,21 @@
+{
+  "id": "digitalocean",
+  "url": {
+    "host": "api.digitalocean.com",
+    "path": "/v2"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('DIGITALOCEAN_TOKEN')"
+  },
+  "meta": {
+    "label": "DigitalOcean",
+    "description": "Cloud VMs, databases, and managed infrastructure",
+    "docs": "https://docs.digitalocean.com/reference/api/",
+    "icon": "https://www.google.com/s2/favicons?domain=digitalocean.com&sz=128",
+    "llms": "https://docs.digitalocean.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/account"
+  }
+}

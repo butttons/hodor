@@ -1,0 +1,20 @@
+{
+  "id": "voyage",
+  "url": {
+    "host": "api.voyageai.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('VOYAGE_API_KEY')"
+  },
+  "meta": {
+    "label": "Voyage AI",
+    "description": "High-quality text embeddings and rerank",
+    "docs": "https://docs.voyageai.com/reference/embeddings",
+    "llms": "https://docs.voyageai.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=voyageai.com&sz=128"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/v1/embeddings"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "vercel",
+  "url": {
+    "host": "api.vercel.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('VERCEL_TOKEN')"
+  },
+  "meta": {
+    "label": "Vercel",
+    "description": "Deploy and host front-end apps and functions",
+    "docs": "https://vercel.com/docs/rest-api",
+    "icon": "https://www.google.com/s2/favicons?domain=vercel.com&sz=128",
+    "llms": "https://vercel.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v9/user"
+  }
+}

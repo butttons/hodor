@@ -1,0 +1,12 @@
+{
+  "id": "poolside",
+  "url": { "host": "inference.poolside.ai", "path": "/v1" },
+  "headers": { "Authorization": "'Bearer ' + kv('POOLSIDE_API_KEY')" },
+  "meta": {
+    "label": "Poolside",
+    "description": "Poolside inference API (OpenAI-compatible chat models)",
+    "docs": "https://poolside.ai",
+    "icon": "https://www.google.com/s2/favicons?domain=poolside.ai&sz=128"
+  },
+  "probe": { "method": "POST", "path": "/chat/completions" }
+}

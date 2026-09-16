@@ -1,0 +1,20 @@
+{
+  "id": "mistral",
+  "url": {
+    "host": "api.mistral.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('MISTRAL_API_KEY')"
+  },
+  "meta": {
+    "label": "Mistral",
+    "description": "Open-weight and frontier LLMs, OpenAI-compatible",
+    "docs": "https://docs.mistral.ai/api/",
+    "llms": "https://docs.mistral.ai/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=mistral.ai&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/models"
+  }
+}

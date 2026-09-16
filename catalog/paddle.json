@@ -1,0 +1,20 @@
+{
+  "id": "paddle",
+  "url": {
+    "host": "api.paddle.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('PADDLE_API_KEY')"
+  },
+  "meta": {
+    "label": "Paddle",
+    "description": "Merchant-of-record billing for software",
+    "docs": "https://developer.paddle.com/api-reference/overview",
+    "icon": "https://www.google.com/s2/favicons?domain=paddle.com&sz=128",
+    "llms": "https://developer.paddle.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/customers"
+  }
+}

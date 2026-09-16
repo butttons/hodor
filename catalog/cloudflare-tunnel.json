@@ -1,0 +1,21 @@
+{
+  "id": "cloudflare-tunnel",
+  "url": {
+    "host": "[hostname]"
+  },
+  "headers": {
+    "CF-Access-Client-Id": "variable('ACCESS_CLIENT_ID')",
+    "CF-Access-Client-Secret": "secret('ACCESS_CLIENT_SECRET')"
+  },
+  "meta": {
+    "label": "Cloudflare Tunnel (Access)",
+    "description": "Any HTTP service behind a Cloudflare Tunnel gated by Access — service-token auth (client ID is non-secret, paired secret stays hidden)",
+    "docs": "https://developers.cloudflare.com/cloudflare-one/identity/service-tokens/",
+    "llms": "https://developers.cloudflare.com/cloudflare-one/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=128"
+  },
+  "variables": {
+    "hostname": "The public hostname of your tunnel, e.g. ops.example.com",
+    "ACCESS_CLIENT_ID": "Access service-token client ID (non-secret — lives in plain vars)"
+  }
+}

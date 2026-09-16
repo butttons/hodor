@@ -1,0 +1,33 @@
+# deps
+node_modules/
+
+# turbo
+.turbo/
+
+# build output
+dist/
+.wrangler/
+
+# astro
+.astro/
+
+# secrets & local env — never commit real values
+.env*
+!.env.example
+.dev.vars*
+!.dev.vars.example
+
+# local runtime data (wrangler --persist-to)
+data/
+
+# logs
+*.log
+# local SSL cert material — never commit
+.certs/
+
+# playwright-cli session artifacts
+.playwright-cli/
+docs/*
+
+# macOS
+.DS_Store

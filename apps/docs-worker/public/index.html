@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>hodor — unify your external services</title>
+    <meta
+      name="description"
+      content="hodor gives every external service one stable URL and handles the credentials. Plain HTTP in and out — any tool that speaks HTTPS can use it."
+    />
+    <meta name="theme-color" content="#000000" />
+    <link rel="canonical" href="https://hodor.ing/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="hodor — unify your external services" />
+    <meta
+      property="og:description"
+      content="Every API behind one stable URL, credentials handled. Plain HTTP in and out — curl, agents, crons, browsers."
+    />
+    <meta property="og:url" content="https://hodor.ing/" />
+    <meta property="og:image" content="https://hodor.ing/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://hodor.ing/og.png" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #000000;
+        --bg-soft: #0a0a0a;
+        --bg-code: #101010;
+        --fg: #f5f5f5;
+        --fg-muted: #9a9a9a;
+        --fg-dim: #6b6b6b;
+        --line: #232323;
+        --accent: #ffb454;
+        --font-display:
+          "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 72px;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      ::selection {
+        background: var(--accent);
+        color: #000;
+      }
+      a {
+        color: var(--fg);
+        text-decoration: underline;
+        text-decoration-color: var(--line);
+        text-underline-offset: 3px;
+      }
+      a:hover {
+        text-decoration-color: var(--accent);
+      }
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 28px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+      }
+      .brand {
+        font-weight: 700;
+        font-size: 17px;
+        letter-spacing: -0.02em;
+        color: var(--fg);
+        text-decoration: none;
+        font-family: var(--font-display);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .brand .logo {
+        width: 22px;
+        height: 22px;
+        border-radius: 6px;
+        display: block;
+      }
+      .brand:hover {
+        text-decoration: none;
+      }
+      .brand {
+        white-space: nowrap;
+      }
+      nav {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-size: 14px;
+      }
+      nav a {
+        color: var(--fg-muted);
+        text-decoration: none;
+      }
+      nav a:hover {
+        color: var(--accent);
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 28px;
+      }
+      .cards.how {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
+      }
+      .cards > * {
+        min-width: 0;
+      }
+      .flow {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .flow .card {
+        width: 100%;
+      }
+      .card {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg-soft);
+        padding: 22px 20px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: var(--font-display);
+      }
+      .card p {
+        margin: 0;
+        color: var(--fg-muted);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .hero {
+        padding: 96px 0 40px;
+      }
+      h1 {
+        margin: 0 0 20px;
+        font-size: 56px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.02;
+        font-family: var(--font-display);
+      }
+      .hero .logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: inline-block;
+        margin-bottom: 28px;
+      }
+      .hero p.lead {
+        margin: 0 0 32px;
+        max-width: 560px;
+        color: var(--fg-muted);
+        font-size: 18px;
+        line-height: 1.6;
+      }
+      .hero p.lead b {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .hero .demo {
+        display: inline-flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 0 0 32px;
+        padding: 12px 16px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg-soft);
+        font:
+          500 13.5px ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: var(--fg-dim);
+      }
+      .hero .demo .row {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .hero .demo .arrow {
+        color: var(--accent);
+        font-weight: 700;
+      }
+      .hero .demo .to {
+        color: var(--fg);
+      }
+      .ctas {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--line);
+        font-family: var(--font-display);
+      }
+      .btn:hover {
+        text-decoration: none;
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: #000;
+        border-color: var(--accent);
+      }
+      .btn.primary:hover {
+        background: #ffca8a;
+        color: #000;
+      }
+      .btn.ghost {
+        color: var(--fg);
+      }
+      .btn.ghost:hover {
+        border-color: var(--fg);
+      }
+      section {
+        padding: 56px 0 8px;
+        border-top: 1px solid var(--line);
+        margin-top: 40px;
+      }
+      .sec-head {
+        margin: 0 0 24px;
+        font-size: 13px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+        font-family: var(--font-display);
+      }
+      p {
+        margin: 0 0 16px;
+      }
+      .muted {
+        color: var(--fg-muted);
+      }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 13px;
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 1px 6px;
+      }
+      pre {
+        background: var(--bg-code);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px 20px;
+        overflow-x: auto;
+        margin: 0 0 16px;
+      }
+      pre code {
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 13px;
+        line-height: 1.7;
+        display: block;
+      }
+      .compare {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      .pane {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg-soft);
+        overflow: hidden;
+      }
+      .pane-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+        font-family: var(--font-display);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--fg-dim);
+      }
+      .pane.old .pane-head {
+        color: var(--fg-dim);
+      }
+      .pane.new .pane-head {
+        color: var(--accent);
+      }
+      .pane pre {
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        padding: 16px 16px 18px;
+        background: transparent;
+      }
+      .pane pre code {
+        font-size: 12.5px;
+      }
+      .pane-body {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+      }
+      .svc {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--bg-code);
+        padding: 12px 14px;
+      }
+      .svc .tag {
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        font-size: 11px;
+        color: var(--fg-dim);
+        margin-bottom: 8px;
+      }
+      .svc .tag b {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .svc pre {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
+      .svc pre code {
+        font-size: 11.5px;
+        line-height: 1.55;
+      }
+      .card .n {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--fg-dim);
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+        font-family: var(--font-display);
+      }
+      .card pre {
+        margin: 12px 0 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        overflow-x: auto;
+      }
+      .card pre code {
+        font-size: 11.5px;
+        line-height: 1.6;
+      }
+      .diff-out {
+        display: inline-block;
+        color: var(--fg-dim);
+      }
+      .diff-in {
+        display: inline-block;
+        color: var(--accent);
+      }
+      .compare-note {
+        margin: 14px 0 0;
+        color: var(--fg-muted);
+        font-size: 14px;
+      }
+      .caveat {
+        margin: 10px 0 0;
+        color: var(--fg-dim);
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .star {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      ul.tight li {
+        margin-bottom: 10px;
+        color: var(--fg-muted);
+      }
+      ul.tight li b {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      footer {
+        margin-top: 96px;
+        border-top: 1px solid var(--line);
+        padding: 28px;
+      }
+      .foot {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        flex-wrap: wrap;
+        color: var(--fg-dim);
+        font-size: 13px;
+      }
+      .foot a {
+        color: var(--fg-muted);
+        text-decoration: none;
+      }
+      .foot a:hover {
+        color: var(--accent);
+      }
+      @media (max-width: 900px) {
+        .hero {
+          padding-top: 64px;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .cards.how {
+          display: flex;
+          flex-direction: column;
+        }
+        .compare {
+          grid-template-columns: 1fr;
+        }
+        .card {
+          padding: 16px;
+        }
+        .card h3 {
+          font-size: 14px;
+        }
+        .card p {
+          font-size: 13px;
+          line-height: 1.5;
+        }
+        .card pre {
+          margin-top: 10px;
+        }
+        .card pre code {
+          font-size: 11px;
+          line-height: 1.55;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+      }
+      @media (max-width: 720px) {
+        h1 {
+          font-size: 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="/">
+        <img class="logo" src="/logo_32.png" alt="hodor logo" />
+        hodor
+      </a>
+      <nav>
+        <a href="/catalog">Catalog</a>
+        <a href="/llms.txt">llms.txt</a>
+        <a href="https://github.com/butttons/hodor" target="_blank" rel="noopener">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Unify your external services</h1>
+        <p class="lead">
+          Every API behind one stable URL. hodor injects the credentials; your keys never leave your
+          server.
+        </p>
+        <div class="demo">
+          <div class="row">
+            <span>api.openai.com</span><span class="arrow">→</span
+            ><span class="to">openai.example.com</span>
+          </div>
+          <div class="row">
+            <span>api.stripe.com</span><span class="arrow">→</span
+            ><span class="to">stripe.example.com</span>
+          </div>
+          <div class="row">
+            <span>api.linear.app</span><span class="arrow">→</span
+            ><span class="to">linear.example.com</span>
+          </div>
+        </div>
+        <div class="ctas">
+          <a class="btn primary" href="#install">Install</a>
+          <a class="btn ghost" href="/llms.txt">Full docs (llms.txt)</a>
+        </div>
+      </div>
+
+      <section id="how">
+        <div class="sec-head">How it works</div>
+        <div class="cards how">
+          <div class="card">
+            <h3>One URL per service</h3>
+            <p>
+              <code>openai.example.com</code> <i>is</i> an integration. Subdomain routing — no path
+              config, nothing to remember.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Credentials handled</h3>
+            <p>
+              Store the key once, encrypted. hodor builds the auth header at request time — callers
+              never see a credential.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Plain HTTP in and out</h3>
+            <p>
+              curl, scripts, agents, browsers. If it speaks HTTPS it works. No SDK, no protocol, no
+              MCP.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="compare">
+        <div class="sec-head">Same calls, one key</div>
+        <p class="muted">
+          Four services, four credentials, four leak surfaces — vs the same four calls with one
+          hodor key and nothing else. Same curl, same JSON, same responses; the URL changed and the
+          keys left the room. (<code>hcurl</code> below is not a binary — it's a shell function
+          wrapping curl with your key; see <a href="#use">Example</a>.)
+        </p>
+        <div class="compare">
+          <div class="pane old">
+            <div class="pane-head">Today <span class="diff-out">— one key per service</span></div>
+            <div class="pane-body">
+              <div class="svc">
+                <div class="tag"><b>linear</b> · lin_api_xxxx</div>
+                <pre><code>curl -X POST https://api.linear.app/graphql \
+  -H "Authorization: lin_api_xxxx" \
+  -d '{"query":"{ viewer { name } }"}'</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>posthog</b> (EU) · phx_xxxx</div>
+                <pre><code>curl -H "Authorization: Bearer phx_xxxx" \
+  https://eu.posthog.com/api/projects/213853/feature_flags/</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>cloudflare</b> · cfat_xxxx</div>
+                <pre><code>curl -H "Authorization: Bearer cfat_xxxx" \
+  https://api.cloudflare.com/client/v4/user/tokens/verify</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>axiom</b> (EU) · xa-xxxx</div>
+                <pre><code>curl -H "Authorization: Bearer xa-xxxx" \
+  https://api.axiom.co/v1/datasets</code></pre>
+              </div>
+            </div>
+          </div>
+          <div class="pane new">
+            <div class="pane-head">
+              With hodor <span class="diff-in">— $HPT, read-only<span class="star">*</span></span>
+            </div>
+            <div class="pane-body">
+              <div class="svc">
+                <div class="tag"><b>linear.example.com</b></div>
+                <pre><code>hcurl <span class="diff-in">linear.example.com</span>/graphql -X POST \
+  -d '{"query":"{ viewer { name } }"}'</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>posthog.example.com</b></div>
+                <pre><code>hcurl <span class="diff-in">posthog.example.com</span>/api/projects/213853/feature_flags/</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>cloudflare.example.com</b></div>
+                <pre><code>hcurl <span class="diff-in">cloudflare.example.com</span>/user/tokens/verify</code></pre>
+              </div>
+              <div class="svc">
+                <div class="tag"><b>axiom.example.com</b></div>
+                <pre><code>hcurl <span class="diff-in">axiom.example.com</span>/v1/datasets</code></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="compare-note">
+          The four upstream credentials stay encrypted on your server — no caller ever holds one.
+          Each caller gets its own key, minted at the
+          <span class="diff-in">finest grain you want</span> (see
+          <a href="#keys">Keys &amp; permissions</a>). Rotating a service key upstream is one admin
+          call, not a hunt through every tool that ever touched it.
+        </p>
+        <div class="card" style="margin-top: 18px">
+          <h3>Shell setup</h3>
+          <p class="muted">
+            Two files, then <code>hcurl openai.example.com/v1/models | jq</code>. No rc
+            function — those never reach agents, cron, or non-interactive ssh.
+          </p>
+          <div class="flow">
+            <div class="card">
+              <span class="n">FILE 1 · chmod +x</span>
+              <h3><code>~/.local/bin/hcurl</code></h3>
+              <p>On <code>PATH</code> (<code>/usr/local/bin</code> for shared boxes).</p>
+              <pre><code>#!/bin/bash
+. ~/.hodor-env
+exec curl -sS -H "X-Authorization: Bearer $HPT" "https://$1" "${@:2}"</code></pre>
+            </div>
+            <div class="card">
+              <span class="n">FILE 2 · chmod 600</span>
+              <h3><code>~/.hodor-env</code></h3>
+              <p>Never commit. Point <code>BASH_ENV</code> here for non-interactive shells.</p>
+              <pre><code>export HPT='&lt;proxy-token&gt;'
+export HAT='&lt;admin-token&gt;'</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="install">
+        <div class="sec-head">Install</div>
+        <p class="muted" style="margin-bottom: 12px">
+          One worker, two secrets, one DNS record. No installer, no lock-in — it's ordinary
+          Cloudflare Workers (or a plain Node/Bun process).
+        </p>
+        <div style="margin-bottom: 18px">
+          <a
+            href="https://deploy.workers.cloudflare.com/?url=https://github.com/butttons/hodor/tree/main/apps/proxy-worker"
+            ><img
+              src="https://deploy.workers.cloudflare.com/button"
+              alt="Deploy to Cloudflare"
+              style="max-width: 100%; border-radius: 6px"
+          /></a>
+        </div>
+        <p class="muted">Local dev first:</p>
+        <div class="flow">
+          <div class="card">
+            <span class="n">STEP 1</span>
+            <h3>Clone</h3>
+            <pre><code>git clone git@github.com:butttons/hodor.git &amp;&amp; cd hodor</code></pre>
+          </div>
+          <div class="card">
+            <span class="n">STEP 2</span>
+            <h3>Install</h3>
+            <pre><code>pnpm install</code></pre>
+          </div>
+          <div class="card">
+            <span class="n">STEP 3</span>
+            <h3>Fill the two keys</h3>
+            <pre><code>cp apps/proxy-worker/.dev.vars.example apps/proxy-worker/.dev.vars</code></pre>
+          </div>
+          <div class="card">
+            <span class="n">STEP 4</span>
+            <h3>Run</h3>
+            <p>→ localhost:8787</p>
+            <pre><code>pnpm --filter @hodor/proxy-worker dev</code></pre>
+          </div>
+        </div>
+        <p class="muted">Deploy in four steps:</p>
+        <ol class="tight">
+          <li>
+            <b>Fill the two secrets:</b><br /><code
+              >cp apps/proxy-worker/.dev.vars.example apps/proxy-worker/.dev.vars</code
+            >
+          </li>
+          <li>
+            <b>Create the KV namespace:</b><br /><code
+              >npx wrangler kv namespace create HODOR_KV</code
+            >
+          </li>
+          <li>
+            <b>Add the DNS record</b> (see <a href="#dns">DNS &amp; TLS</a> — do not skip):<br />proxied
+            <code>A</code> record <code>*.example.com</code> → <code>192.0.2.0</code>
+          </li>
+          <li>
+            <b>Deploy</b> — first deploy uploads secrets, later ones are plain:<br /><code
+              >npx wrangler deploy --secrets-file .dev.vars</code
+            >
+            (first time only)<br /><code>npx wrangler deploy</code> (every time after)
+          </li>
+        </ol>
+        <p class="muted">
+          Full steps in <a href="/llms.txt">llms.txt</a> — including the production-vs-local secret
+          warning (minting against the deployed worker needs the production
+          <code>HODOR_JWT_SECRET</code>, not <code>.dev.vars</code>) and troubleshooting.
+        </p>
+      </section>
+      <section id="use">
+        <div class="sec-head">Example</div>
+        <p class="muted">
+          Configure once through a small admin API — no code, no redeploys. Three calls, one-time
+          setup:
+        </p>
+        <div class="flow">
+          <div class="card">
+            <span class="n">STEP 1</span>
+            <h3>Store the key</h3>
+            <p>Encrypted at rest; hodor is the only reader.</p>
+            <pre><code>curl -X PUT -H "X-Authorization: Bearer $HAT" \
+  --data-binary 'sk-...' \
+  https://example.com/_/admin/secrets/OPENAI_API_KEY</code></pre>
+          </div>
+          <div class="card">
+            <span class="n">STEP 2</span>
+            <h3>Register the integration</h3>
+            <p>
+              Target, auth header (<a href="#secrets">pick a secret helper</a>), optional probe.
+            </p>
+            <pre><code>curl -X PATCH https://example.com/_/admin/registry/openai \
+  -H "X-Authorization: Bearer $HAT" \
+  -H 'content-type: application/json' \
+  --data-binary @- &lt;&lt;'JSON'
+{
+  "id": "openai",
+  "description": "OpenAI REST API",
+  "url": { "host": "api.openai.com", "path": "/v1" },
+  "headers": { "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')" },
+  "probe": { "method": "GET", "path": "/v1/models" }
+}
+JSON</code></pre>
+          </div>
+          <div class="card">
+            <span class="n">STEP 3</span>
+            <h3>Call it</h3>
+            <p>Credentials injected for you, upstream. Canonical CLI (see Shell setup above):</p>
+            <pre><code>hcurl openai.example.com/v1/models</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="keys">
+        <div class="sec-head">Keys &amp; permissions</div>
+        <p class="muted">
+          One signed JWT per consumer. Restrictions use a single vocabulary — <code>only</code> /
+          <code>except</code> — globally and per integration. <code>except</code> always wins;
+          per-item rules narrow the globals, never widen.
+        </p>
+        <div class="card">
+          <pre><code>{
+  "scopes": ["proxy:call"],
+  "integrations": [
+    {"id": "stripe"},
+    {"id": "razorpay", "only": {"methods": ["GET", "HEAD"]}}
+  ]
+}</code></pre>
+          <p class="muted">
+            Stripe stays broad, Razorpay is read-only — on the same key. Mint at
+            <code>POST /_/keys</code>, revoke one key without touching the rest, and read every
+            integration in <a href="/catalog">the catalog</a>.
+          </p>
+        </div>
+      </section>
+
+      <section id="secrets">
+        <div class="sec-head">Injecting secrets</div>
+        <p class="muted">
+          Header values are JEXL expressions. Four helpers, picked per deployment:
+        </p>
+        <ul class="tight">
+          <li>
+            <code>kv('NAME')</code> — hodor's own encrypted KV store. Portable, works everywhere.
+          </li>
+          <li>
+            <code>secret('NAME')</code> — plain worker secret binding. Zero extra dependencies.
+          </li>
+          <li>
+            <code>secret_store('NAME')</code> — Cloudflare Secrets Store via
+            <code>env.NAME.get()</code>. Strongest isolation.
+          </li>
+          <li>
+            <code>variable('NAME')</code> — plain-text env var. IDs, usernames, account IDs — never
+            secrets.
+          </li>
+          <li>
+            <code>process_env('NAME')</code> — host <code>process.env</code>. Standalone Node/Bun
+            only.
+          </li>
+        </ul>
+        <p class="muted">
+          Rule: passwords/tokens/keys → secrets; IDs/usernames → <code>vars</code> +
+          <code>variable()</code>. Example: <code>'Bearer ' + kv('OPENAI_API_KEY')</code>. Reserved
+          helper names can't be shadowed.
+        </p>
+      </section>
+
+      <section id="dns">
+        <div class="sec-head">DNS &amp; TLS</div>
+        <p class="muted">
+          <b>Do not skip this.</b> The wildcard (<code>*.example.com</code>) is a worker
+          <b>route</b>, and routes do not create DNS — you must add the record by hand: a
+          <b>proxied</b> <code>A</code> record for <code>*</code> pointing at the dummy address
+          <code>192.0.2.0</code>. Without it the worker deploys fine and serves nothing. The apex
+          (<code>example.com</code>) is the opposite: attach it as a <b>custom domain</b> and
+          Cloudflare provisions DNS + certificate automatically.
+        </p>
+        <ul class="tight">
+          <li>
+            <b>Free tier works out of the box.</b> The proxy runs at
+            <code>*.example.com</code> (first level), which Cloudflare's free Universal SSL covers —
+            apex and first level need zero certificate setup.
+          </li>
+          <li>
+            <b>Deeper subdomains</b> (<code>a.b.example.com</code>) are a TLS thing, not a DNS thing
+            — DNS routes at any depth, certificates don't. Those need Total TLS (paid) or a custom
+            certificate (Business plan).
+          </li>
+        </ul>
+      </section>
+
+      <section id="security">
+        <div class="sec-head">Security</div>
+        <ul class="tight">
+          <li>
+            <b>Keys stay encrypted.</b> Credentials are AES-GCM ciphertext in KV; only hodor can
+            decrypt them, and only at request time. Access itself is scoped per key (see
+            <a href="#keys">Keys &amp; permissions</a>) — revoke one in ~30 seconds, or rotate the
+            signing secret to void everything at once.
+          </li>
+          <li>
+            <b>Complete audit log.</b> Every request is recorded — who called which integration,
+            when, and what came back — including rejections and upstream failures. Query it over
+            SQL, dashboard or API (see <a href="/llms.txt">llms.txt</a>).
+          </li>
+        </ul>
+      </section>
+    </main>
+
+    <footer>
+      <div class="foot">
+        <span>© 2026 Yash</span>
+        <span>
+          <a href="/llms.txt">llms.txt</a>
+          &nbsp;·&nbsp;
+          <a href="https://github.com/butttons/hodor" target="_blank" rel="noopener">GitHub</a>
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>

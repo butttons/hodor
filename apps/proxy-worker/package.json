@@ -1,0 +1,57 @@
+{
+  "name": "@hodor/proxy-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --persist-to=../../data --port ${PORT:-8787}",
+    "dev:node": "tsx watch src/entry/node.ts",
+    "dev:bun": "bun --watch src/entry/bun.ts",
+    "build:node": "esbuild src/entry/node.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/node.js --sourcemap",
+    "build:bun": "bun build src/entry/bun.ts --target=bun --outfile=dist/bun.js",
+    "build": "pnpm run build:node && pnpm run build:bun",
+    "start:node": "node dist/node.js",
+    "start:bun": "bun dist/bun.js",
+    "cf-typegen": "wrangler types",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "deploy": "wrangler deploy",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@hono/zod-validator": "^0.9.1",
+    "@scalar/hono-api-reference": "^0.12.1",
+    "hono": "^4.13.7",
+    "jexl": "^2.3.0",
+    "unstorage": "^1.17.5",
+    "zod": "^4.6.4"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "^1.0.0",
+    "@types/node": "^22.20.2",
+    "esbuild": "^0.28.2",
+    "oxfmt": "^0.67.0",
+    "oxlint": "^1.82.0",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3",
+    "vitest": "~4.1.0",
+    "wrangler": "^4.131.1"
+  },
+  "cloudflare": {
+    "bindings": {
+      "HODOR_KV": {
+        "description": "KV namespace for encrypted secrets and the registry — provisioned automatically by the Deploy button."
+      },
+      "HODOR_ENCRYPTION_KEY": {
+        "description": "AES-GCM master key for stored secrets. Generate with `openssl rand -base64 32`."
+      },
+      "HODOR_JWT_SECRET": {
+        "description": "Signs minted API keys (HS256). Generate with `openssl rand -hex 32`."
+      }
+    }
+  }
+}

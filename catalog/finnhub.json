@@ -1,0 +1,21 @@
+{
+  "id": "finnhub",
+  "url": {
+    "host": "finnhub.io"
+  },
+  "headers": {},
+  "meta": {
+    "label": "Finnhub",
+    "description": "Real-time stock, forex, and financial data",
+    "docs": "https://finnhub.io/docs",
+    "icon": "https://www.google.com/s2/favicons?domain=finnhub.io&sz=128",
+    "llms": "https://finnhub.io/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/v1/quote?symbol=AAPL"
+  },
+  "query": {
+    "token": "kv('FINNHUB_API_KEY')"
+  }
+}

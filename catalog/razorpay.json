@@ -1,0 +1,21 @@
+{
+  "id": "razorpay",
+  "url": {
+    "host": "api.razorpay.com"
+  },
+  "headers": {
+    "Authorization": "'Basic ' + base64(kv('RAZORPAY_KEY_ID') + ':' + kv('RAZORPAY_KEY_SECRET'))"
+  },
+  "meta": {
+    "label": "Razorpay",
+    "description": "Razorpay payments API",
+    "docs": "https://razorpay.com/docs/api/",
+    "icon": "https://www.google.com/s2/favicons?domain=razorpay.com&sz=128",
+    "llms": "https://razorpay.com/llms.txt",
+    "note": "Live keys \u2014 default to GET reads unless writes are explicitly needed."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/payments"
+  }
+}

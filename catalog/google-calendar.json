@@ -1,0 +1,20 @@
+{
+  "id": "google-calendar",
+  "url": {
+    "host": "www.googleapis.com",
+    "path": "/calendar/v3"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('GOOGLE_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Google Calendar",
+    "description": "Google Calendar REST API",
+    "docs": "https://developers.google.com/calendar/api/reference/rest",
+    "icon": "https://www.google.com/s2/favicons?domain=google.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/calendarList"
+  }
+}

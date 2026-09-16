@@ -1,0 +1,20 @@
+{
+  "id": "elevenlabs",
+  "url": {
+    "host": "api.elevenlabs.io"
+  },
+  "headers": {
+    "xi-api-key": "kv('ELEVENLABS_API_KEY')"
+  },
+  "meta": {
+    "label": "ElevenLabs",
+    "description": "AI text-to-speech and voice generation",
+    "docs": "https://elevenlabs.io/docs/api-reference",
+    "icon": "https://www.google.com/s2/favicons?domain=elevenlabs.io&sz=128",
+    "llms": "https://elevenlabs.io/docs/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/user"
+  }
+}

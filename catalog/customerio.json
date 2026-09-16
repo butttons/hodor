@@ -1,0 +1,20 @@
+{
+  "id": "customerio",
+  "url": {
+    "host": "api.customer.io"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('CUSTOMERIO_APP_API_KEY')"
+  },
+  "meta": {
+    "label": "Customer.io",
+    "description": "Customer.io App API — campaigns, segments, people (US region; EU is api-eu.customer.io; Track API is separate basic auth)",
+    "docs": "https://docs.customer.io/integrations/api/app/",
+    "llms": "https://docs.customer.io/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=customer.io&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/segments"
+  }
+}

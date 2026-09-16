@@ -1,0 +1,12 @@
+{
+  "id": "opencode",
+  "url": { "host": "opencode.ai", "path": "/zen/v1" },
+  "headers": { "Authorization": "'Bearer ' + kv('OPENCODE_API_KEY')" },
+  "meta": {
+    "label": "OpenCode",
+    "description": "OpenCode.ai coding LLM gateway (OpenAI-compatible)",
+    "docs": "https://opencode.ai/zen",
+    "icon": "https://www.google.com/s2/favicons?domain=opencode.ai&sz=128"
+  },
+  "probe": { "method": "POST", "path": "/chat/completions" }
+}

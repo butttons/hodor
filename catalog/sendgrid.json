@@ -1,0 +1,20 @@
+{
+  "id": "sendgrid",
+  "url": {
+    "host": "api.sendgrid.com",
+    "path": "/v3"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('SENDGRID_API_KEY')"
+  },
+  "meta": {
+    "label": "SendGrid",
+    "description": "Transactional and marketing email (Twilio)",
+    "docs": "https://docs.sendgrid.com/api-reference",
+    "icon": "https://www.google.com/s2/favicons?domain=sendgrid.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/user/account"
+  }
+}

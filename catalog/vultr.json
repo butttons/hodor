@@ -1,0 +1,20 @@
+{
+  "id": "vultr",
+  "url": {
+    "host": "api.vultr.com",
+    "path": "/v2"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('VULTR_API_KEY')"
+  },
+  "meta": {
+    "label": "Vultr",
+    "description": "Cloud compute, storage, and bare metal",
+    "docs": "https://www.vultr.com/api/",
+    "icon": "https://www.google.com/s2/favicons?domain=vultr.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/account"
+  }
+}

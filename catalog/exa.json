@@ -1,0 +1,20 @@
+{
+  "id": "exa",
+  "url": {
+    "host": "api.exa.ai"
+  },
+  "headers": {
+    "x-api-key": "kv('EXA_API_KEY')"
+  },
+  "meta": {
+    "label": "Exa",
+    "description": "Neural web search built for AI agents",
+    "docs": "https://docs.exa.ai/reference",
+    "icon": "https://www.google.com/s2/favicons?domain=exa.ai&sz=128",
+    "llms": "https://docs.exa.ai/llms.txt"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/contents"
+  }
+}

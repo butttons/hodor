@@ -1,0 +1,21 @@
+{
+  "id": "facebook",
+  "url": {
+    "host": "graph.facebook.com"
+  },
+  "headers": {},
+  "query": {
+    "access_token": "kv('FACEBOOK_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Facebook",
+    "description": "Facebook Graph API",
+    "docs": "https://developers.facebook.com/docs/graph-api",
+    "llms": "https://developers.facebook.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=facebook.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v22.0/me"
+  }
+}

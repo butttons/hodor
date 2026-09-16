@@ -1,0 +1,21 @@
+{
+  "id": "datadog",
+  "url": {
+    "host": "api.datadoghq.com"
+  },
+  "headers": {
+    "DD-API-KEY": "kv('DD_API_KEY')",
+    "DD-APPLICATION-KEY": "kv('DD_APP_KEY')"
+  },
+  "meta": {
+    "label": "Datadog",
+    "description": "Infrastructure and application monitoring",
+    "docs": "https://docs.datadoghq.com/api/",
+    "llms": "https://docs.datadoghq.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=datadoghq.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/v1/validate"
+  }
+}

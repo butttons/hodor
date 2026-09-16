@@ -1,0 +1,21 @@
+{
+  "id": "onesignal",
+  "url": {
+    "host": "onesignal.com",
+    "path": "/api/v1"
+  },
+  "headers": {
+    "Authorization": "'Key ' + kv('ONESIGNAL_APP_KEY')"
+  },
+  "meta": {
+    "label": "OneSignal",
+    "description": "Push notifications and customer messaging",
+    "docs": "https://documentation.onesignal.com/reference",
+    "icon": "https://www.google.com/s2/favicons?domain=onesignal.com&sz=128",
+    "llms": "https://documentation.onesignal.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/apps"
+  }
+}

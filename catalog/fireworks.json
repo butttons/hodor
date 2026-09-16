@@ -1,0 +1,20 @@
+{
+  "id": "fireworks",
+  "url": {
+    "host": "api.fireworks.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('FIREWORKS_API_KEY')"
+  },
+  "meta": {
+    "label": "Fireworks AI",
+    "description": "Fast hosted inference for open LLMs, OpenAI-compatible",
+    "docs": "https://docs.fireworks.ai/api-reference",
+    "llms": "https://docs.fireworks.ai/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=fireworks.ai&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/inference/v1/models"
+  }
+}

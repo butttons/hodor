@@ -1,0 +1,20 @@
+{
+  "id": "postmark",
+  "url": {
+    "host": "api.postmarkapp.com"
+  },
+  "headers": {
+    "X-Postmark-Server-Token": "kv('POSTMARK_SERVER_TOKEN')"
+  },
+  "meta": {
+    "label": "Postmark",
+    "description": "Fast, reliable transactional email",
+    "docs": "https://postmarkapp.com/developer/api/overview",
+    "icon": "https://www.google.com/s2/favicons?domain=postmarkapp.com&sz=128",
+    "llms": "https://postmarkapp.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/stats/outbound"
+  }
+}

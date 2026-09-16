@@ -1,0 +1,20 @@
+{
+  "id": "mixpanel",
+  "url": {
+    "host": "mixpanel.com"
+  },
+  "headers": {
+    "Authorization": "'Basic ' + base64(kv('MIXPANEL_USERNAME') + ':' + kv('MIXPANEL_PASSWORD'))"
+  },
+  "meta": {
+    "label": "Mixpanel",
+    "description": "Product analytics Query API — service-account basic auth (api.mixpanel.com is ingestion-only; data.mixpanel.com is export with project-secret auth)",
+    "docs": "https://developer.mixpanel.com/reference",
+    "icon": "https://www.google.com/s2/favicons?domain=mixpanel.com&sz=128",
+    "llms": "https://developer.mixpanel.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/app/me"
+  }
+}

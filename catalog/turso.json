@@ -1,0 +1,21 @@
+{
+  "id": "turso",
+  "url": {
+    "host": "api.turso.tech",
+    "path": "/v1"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('TURSO_PLATFORM_TOKEN')"
+  },
+  "meta": {
+    "label": "Turso",
+    "description": "SQLite-compatible edge database platform (libSQL)",
+    "docs": "https://docs.turso.tech",
+    "icon": "https://www.google.com/s2/favicons?domain=turso.tech&sz=128",
+    "llms": "https://docs.turso.tech/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/organizations"
+  }
+}

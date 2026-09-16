@@ -1,0 +1,19 @@
+{
+  "id": "slack-hooks",
+  "url": {
+    "host": "hooks.slack.com",
+    "path": "/services/[team]/[bot]/[secret]"
+  },
+  "headers": {},
+  "meta": {
+    "label": "Slack Incoming Webhooks",
+    "description": "Slack incoming webhooks \u2014 credentials live in the URL path, no header auth",
+    "docs": "https://api.slack.com/messaging/webhooks",
+    "icon": "https://www.google.com/s2/favicons?domain=slack.com&sz=128"
+  },
+  "variables": {
+    "team": "Workspace token segment of the webhook URL (starts with T), e.g. T012AB3CD",
+    "bot": "Channel/bot segment of the webhook URL (starts with B), e.g. B01EF2GH3",
+    "secret": "Final secret path segment of the webhook URL \u2014 the credential itself"
+  }
+}

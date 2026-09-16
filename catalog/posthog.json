@@ -1,0 +1,22 @@
+{
+  "id": "posthog",
+  "url": {
+    "host": "us.posthog.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('POSTHOG_API_KEY')"
+  },
+  "meta": {
+    "label": "PostHog",
+    "description": "Open-source product analytics and session replay",
+    "docs": "https://posthog.com/docs/api",
+    "icon": "https://www.google.com/s2/favicons?domain=posthog.com&sz=128",
+    "openapi": "https://posthog.com/openapi.json",
+    "llms": "https://posthog.com/llms.txt",
+    "note": "EU cloud is eu.posthog.com (US hosts return nothing useful for EU projects). HogQL at /api/projects/{id}/query/."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/projects/"
+  }
+}

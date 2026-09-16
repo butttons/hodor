@@ -1,0 +1,21 @@
+{
+  "id": "cohere",
+  "url": {
+    "host": "api.cohere.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('COHERE_API_KEY')"
+  },
+  "meta": {
+    "label": "Cohere",
+    "description": "Enterprise LLMs for chat, embeddings, and rerank",
+    "docs": "https://docs.cohere.com/reference",
+    "llms": "https://docs.cohere.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=cohere.com&sz=128",
+    "openapi": "https://docs.cohere.com/openapi.json"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v2/models"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "brave",
+  "url": {
+    "host": "api.search.brave.com"
+  },
+  "headers": {
+    "X-Subscription-Token": "kv('BRAVE_SEARCH_API_KEY')"
+  },
+  "meta": {
+    "label": "Brave Search",
+    "description": "Independent web search API with its own index",
+    "docs": "https://brave.com/api/",
+    "icon": "https://www.google.com/s2/favicons?domain=brave.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/res/v1/web/search?q=test"
+  }
+}

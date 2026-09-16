@@ -1,0 +1,19 @@
+{
+  "id": "hodor",
+  "url": {
+    "host": "[domain]"
+  },
+  "headers": {
+    "X-Authorization": "'Bearer ' + kv('HODOR_API_TOKEN')"
+  },
+  "meta": {
+    "label": "Hodor",
+    "description": "Self-hosted token-injecting proxy — cascade one instance behind another or call a sibling deployment",
+    "docs": "https://hodor.ing",
+    "icon": "https://www.google.com/s2/favicons?domain=hodor.ing&sz=128",
+    "llms": "https://hodor.ing/llms.txt"
+  },
+  "variables": {
+    "domain": "Apex domain of the hodor instance, e.g. example.com"
+  }
+}

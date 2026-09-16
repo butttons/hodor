@@ -1,0 +1,17 @@
+{
+  "name": "@hodor/docs-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/snapshot-catalog.mjs && wrangler dev",
+    "build": "node scripts/snapshot-catalog.mjs",
+    "deploy": "node scripts/snapshot-catalog.mjs && wrangler deploy"
+  },
+  "dependencies": {
+    "hono": "^4.13.7"
+  },
+  "devDependencies": {
+    "wrangler": "^4.131.1"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "gitlab",
+  "url": {
+    "host": "gitlab.com",
+    "path": "/api/v4"
+  },
+  "headers": {
+    "PRIVATE-TOKEN": "kv('GITLAB_TOKEN')"
+  },
+  "meta": {
+    "label": "GitLab",
+    "description": "Git hosting, CI/CD, and DevOps platform",
+    "docs": "https://docs.gitlab.com/api/",
+    "icon": "https://www.google.com/s2/favicons?domain=gitlab.com&sz=128",
+    "llms": "https://docs.gitlab.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/user"
+  }
+}

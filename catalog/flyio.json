@@ -1,0 +1,19 @@
+{
+  "id": "flyio",
+  "url": {
+    "host": "api.machines.dev"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('FLY_API_TOKEN')"
+  },
+  "meta": {
+    "label": "Fly.io",
+    "description": "Deploy app containers close to users, globally",
+    "docs": "https://fly.io/docs/machines/",
+    "icon": "https://www.google.com/s2/favicons?domain=fly.io&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/apps"
+  }
+}

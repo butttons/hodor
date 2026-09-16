@@ -1,0 +1,18 @@
+{
+  "id": "pouch",
+  "url": {
+    "host": "pouch-cms.[account].workers.dev"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('POUCH_API_KEY')"
+  },
+  "meta": {
+    "label": "Pouch",
+    "description": "Self-hosted headless CMS on Cloudflare Workers",
+    "docs": "https://github.com/butttons/pouch",
+    "icon": "https://www.google.com/s2/favicons?domain=pouch.cms&sz=128"
+  },
+  "variables": {
+    "account": "Your Cloudflare account name/subdomain for the pouch-cms worker, e.g. myorg"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "figma",
+  "url": {
+    "host": "api.figma.com"
+  },
+  "headers": {
+    "X-Figma-Token": "kv('FIGMA_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Figma",
+    "description": "Collaborative interface design: files, comments, and components",
+    "docs": "https://www.figma.com/developers/api",
+    "icon": "https://www.google.com/s2/favicons?domain=figma.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/me"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "id": "zendesk",
+  "url": {
+    "host": "<subdomain>.zendesk.com",
+    "path": "/api/v2"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('ZENDESK_API_TOKEN')"
+  },
+  "meta": {
+    "label": "Zendesk",
+    "description": "Zendesk support and ticketing API",
+    "docs": "https://developer.zendesk.com/api-reference",
+    "icon": "https://www.google.com/s2/favicons?domain=zendesk.com&sz=128"
+  },
+  "variables": {
+    "subdomain": "Your Zendesk subdomain (e.g. 'mycompany' for mycompany.zendesk.com)"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/users/me.json"
+  }
+}

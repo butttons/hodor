@@ -1,0 +1,21 @@
+{
+  "id": "pagerduty",
+  "url": {
+    "host": "api.pagerduty.com"
+  },
+  "headers": {
+    "Authorization": "'Token token=' + kv('PAGERDUTY_API_KEY')"
+  },
+  "meta": {
+    "label": "PagerDuty",
+    "description": "PagerDuty incident management API",
+    "docs": "https://developer.pagerduty.com/docs/rest-api",
+    "llms": "https://developer.pagerduty.com/llms.txt",
+    "openapi": "https://developer.pagerduty.com/docs/openapi.json",
+    "icon": "https://www.google.com/s2/favicons?domain=pagerduty.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/users/me"
+  }
+}

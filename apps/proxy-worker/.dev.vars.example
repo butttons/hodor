@@ -1,0 +1,16 @@
+# Copy to .dev.vars and fill in before running `pnpm dev`. Never commit real values.
+#
+# LOCAL ONLY: these two are for `wrangler dev` / standalone runs. Production uses
+# `wrangler secret` values — minting against the deployed worker with the local
+# HODOR_JWT_SECRET fails with `401 Invalid secret` (and vice versa).
+#
+# Secrets (set these via `wrangler secret put` in production)
+# Generate with: openssl rand -base64 32
+HODOR_ENCRYPTION_KEY=
+# Generate with: openssl rand -hex 32
+HODOR_JWT_SECRET=
+
+# Standalone runtime only (Node/Bun): unstorage backend. Omit for memory, or
+# set HODOR_KV_DRIVER=memory / HODOR_KV_DATA_DIR=./.data/kv for an fs-backed one.
+# HODOR_KV_DRIVER=memory
+# HODOR_KV_DATA_DIR=.data/kv

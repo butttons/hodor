@@ -1,0 +1,21 @@
+{
+  "id": "perplexity",
+  "url": {
+    "host": "api.perplexity.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('PERPLEXITY_API_KEY')"
+  },
+  "meta": {
+    "label": "Perplexity",
+    "description": "Answer engine with live web search (Sonar models)",
+    "docs": "https://docs.perplexity.ai/api-reference",
+    "llms": "https://docs.perplexity.ai/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=128",
+    "openapi": "https://docs.perplexity.ai/openapi.json"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/chat/completions"
+  }
+}

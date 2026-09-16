@@ -1,0 +1,20 @@
+{
+  "id": "google-drive",
+  "url": {
+    "host": "www.googleapis.com",
+    "path": "/drive/v3"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('GOOGLE_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Google Drive",
+    "description": "Google Drive REST API for files and folders",
+    "docs": "https://developers.google.com/drive/api/reference/rest",
+    "icon": "https://www.google.com/s2/favicons?domain=google.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/about"
+  }
+}

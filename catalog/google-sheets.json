@@ -1,0 +1,20 @@
+{
+  "id": "google-sheets",
+  "url": {
+    "host": "sheets.googleapis.com",
+    "path": "/v4"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('GOOGLE_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Google Sheets",
+    "description": "Google Sheets REST API",
+    "docs": "https://developers.google.com/sheets/api/reference/rest",
+    "icon": "https://www.google.com/s2/favicons?domain=google.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/spreadsheets"
+  }
+}

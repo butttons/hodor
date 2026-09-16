@@ -1,0 +1,23 @@
+{
+  "id": "shopify",
+  "url": {
+    "host": "<shop>.myshopify.com",
+    "path": "/admin/api/2024-01"
+  },
+  "headers": {
+    "X-Shopify-Access-Token": "kv('SHOPIFY_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Shopify",
+    "description": "Shopify Admin REST API for e-commerce",
+    "docs": "https://shopify.dev/docs/api/admin-rest",
+    "icon": "https://www.google.com/s2/favicons?domain=shopify.com&sz=128"
+  },
+  "variables": {
+    "shop": "Your Shopify store name (the .myshopify.com subdomain, e.g. 'mystore')"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/shop.json"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "gemini",
+  "url": {
+    "host": "generativelanguage.googleapis.com",
+    "path": "/v1"
+  },
+  "headers": {},
+  "query": {
+    "key": "kv('GEMINI_API_KEY')"
+  },
+  "meta": {
+    "label": "Google Gemini",
+    "description": "Google Gemini multimodal LLMs",
+    "docs": "https://ai.google.dev/gemini-api/docs",
+    "llms": "https://ai.google.dev/gemini-api/docs/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=google.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/models"
+  }
+}

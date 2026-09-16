@@ -1,0 +1,20 @@
+{
+  "id": "zai",
+  "url": {
+    "host": "api.z.ai",
+    "path": "/api/paas/v4"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('ZAI_API_KEY')"
+  },
+  "meta": {
+    "label": "Z.AI",
+    "description": "Zhipu GLM models (OpenAI-compatible)",
+    "docs": "https://z.ai",
+    "icon": "https://www.google.com/s2/favicons?domain=z.ai&sz=128"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/chat/completions"
+  }
+}

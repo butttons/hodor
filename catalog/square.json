@@ -1,0 +1,21 @@
+{
+  "id": "square",
+  "url": {
+    "host": "connect.squareup.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('SQUARE_ACCESS_TOKEN')",
+    "Square-Version": "'2024-01-18'"
+  },
+  "meta": {
+    "label": "Square",
+    "description": "Payments, point-of-sale, and commerce",
+    "docs": "https://developer.squareup.com/reference/square",
+    "icon": "https://www.google.com/s2/favicons?domain=squareup.com&sz=128",
+    "llms": "https://developer.squareup.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v2/customers"
+  }
+}

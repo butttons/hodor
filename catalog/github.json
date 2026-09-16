@@ -1,0 +1,21 @@
+{
+  "id": "github",
+  "url": {
+    "host": "api.github.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('GITHUB_TOKEN')"
+  },
+  "meta": {
+    "label": "GitHub",
+    "description": "GitHub REST API \u2014 code, repos, issues, PRs, Actions, and more",
+    "docs": "https://docs.github.com/en/rest",
+    "llms": "https://docs.github.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=github.com&sz=128",
+    "openapi": "https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/user"
+  }
+}

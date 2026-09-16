@@ -1,0 +1,20 @@
+{
+  "id": "groq",
+  "url": {
+    "host": "api.groq.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('GROQ_API_KEY')"
+  },
+  "meta": {
+    "label": "Groq",
+    "description": "Ultra-low-latency LLM inference, OpenAI-compatible",
+    "docs": "https://console.groq.com/docs/api-reference",
+    "llms": "https://docs.groq.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=groq.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/openai/v1/models"
+  }
+}

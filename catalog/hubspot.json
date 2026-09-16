@@ -1,0 +1,20 @@
+{
+  "id": "hubspot",
+  "url": {
+    "host": "api.hubapi.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('HUBSPOT_API_KEY')"
+  },
+  "meta": {
+    "label": "HubSpot",
+    "description": "HubSpot CRM, marketing, and sales API",
+    "docs": "https://developers.hubspot.com/docs/api",
+    "llms": "https://developers.hubspot.com/docs/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=hubspot.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/crm/v3/objects/contacts"
+  }
+}

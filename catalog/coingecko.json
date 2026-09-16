@@ -1,0 +1,20 @@
+{
+  "id": "coingecko",
+  "url": {
+    "host": "api.coingecko.com"
+  },
+  "headers": {
+    "x-cg-demo-api-key": "kv('COINGECKO_API_KEY')"
+  },
+  "meta": {
+    "label": "CoinGecko",
+    "description": "Cryptocurrency prices and market data",
+    "docs": "https://docs.coingecko.com/reference/introduction",
+    "icon": "https://www.google.com/s2/favicons?domain=coingecko.com&sz=128",
+    "llms": "https://docs.coingecko.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/v3/ping"
+  }
+}

@@ -1,0 +1,5 @@
+# Generated / vendored artifacts oxfmt should not reformat
+apps/docs-worker/.tmp-build/
+apps/docs-worker/public/worker-bundle.js
+**/*.map
+**/worker-configuration.d.ts

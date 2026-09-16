@@ -1,0 +1,20 @@
+{
+  "id": "amplitude",
+  "url": {
+    "host": "api.amplitude.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('AMPLITUDE_API_KEY')"
+  },
+  "meta": {
+    "label": "Amplitude",
+    "description": "Amplitude product analytics API",
+    "docs": "https://amplitude.com/docs/api",
+    "llms": "https://amplitude.com/docs/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=amplitude.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/2/users"
+  }
+}

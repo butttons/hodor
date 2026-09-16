@@ -1,0 +1,21 @@
+{
+  "id": "spotify",
+  "url": {
+    "host": "api.spotify.com",
+    "path": "/v1"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('SPOTIFY_ACCESS_TOKEN')"
+  },
+  "meta": {
+    "label": "Spotify",
+    "description": "Spotify Web API for music data and player control",
+    "docs": "https://developer.spotify.com/docs/web-api",
+    "llms": "https://developer.spotify.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=spotify.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/me"
+  }
+}

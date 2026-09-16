@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hodor-proxy",
+  "main": "./src/index.ts",
+  "compatibility_date": "2026-09-13",
+  "observability": {
+    "enabled": true,
+  },
+  "upload_source_maps": true,
+  "secrets": {
+    "required": ["HODOR_ENCRYPTION_KEY", "HODOR_JWT_SECRET"],
+  },
+  "kv_namespaces": [
+    {
+      "binding": "HODOR_KV",
+      "id": "b7d7d8bb6dbf4dc1a21d1ed6ffd69529",
+    },
+  ],
+  "analytics_engine_datasets": [
+    {
+      "binding": "HODOR_ANALYTICS",
+      "dataset": "hodor_traffic",
+    },
+    {
+      "binding": "HODOR_AUDIT",
+      "dataset": "hodor_audit_log",
+    },
+  ],
+  "vars": {
+    "HODOR_APP_URL": "https://example.com",
+    "HODOR_CATALOG_RAW_BASE": "https://raw.githubusercontent.com/butttons/hodor/main/catalog",
+  },
+  "routes": [
+    {
+      // Zone must exist in the account before deploy (add example.com to Cloudflare).
+      // Wildcard subdomain = a worker route, NOT a custom domain (custom domains
+      // only support apex/single hosts). Proxy lives under *.example.com (first
+      // level — covered by Universal SSL, no custom cert needed); docs owns the
+      // apex `example.com`.
+      "pattern": "*.example.com/*",
+      "zone_name": "example.com",
+    },
+  ],
+}

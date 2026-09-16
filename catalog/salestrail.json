@@ -1,0 +1,19 @@
+{
+  "id": "salestrail",
+  "url": {
+    "host": "standalone-api.salestrail.io"
+  },
+  "headers": {
+    "Authorization": "'Basic ' + base64(kv('SALESTRAIL_API_USERNAME') + ':' + kv('SALESTRAIL_API_PASSWORD'))"
+  },
+  "meta": {
+    "label": "Salestrail",
+    "description": "Salestrail call analytics export API — basic auth; call exports require from+to Instant query params",
+    "docs": "https://salestrail.io",
+    "icon": "https://www.google.com/s2/favicons?domain=salestrail.io&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/export/calls/json?from=2026-09-14T00:00:00Z&to=2026-09-15T00:00:00Z"
+  }
+}

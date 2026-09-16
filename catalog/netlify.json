@@ -1,0 +1,21 @@
+{
+  "id": "netlify",
+  "url": {
+    "host": "api.netlify.com",
+    "path": "/api/v1"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('NETLIFY_AUTH_TOKEN')"
+  },
+  "meta": {
+    "label": "Netlify",
+    "description": "Deploy and host web front-ends and functions",
+    "docs": "https://docs.netlify.com/api/get-started/",
+    "icon": "https://www.google.com/s2/favicons?domain=netlify.com&sz=128",
+    "llms": "https://docs.netlify.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/sites"
+  }
+}

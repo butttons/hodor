@@ -1,0 +1,21 @@
+{
+  "id": "neon",
+  "url": {
+    "host": "console.neon.tech",
+    "path": "/api/v2"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('NEON_API_KEY')"
+  },
+  "meta": {
+    "label": "Neon",
+    "description": "Serverless PostgreSQL with branching",
+    "docs": "https://neon.tech/docs/reference/api",
+    "icon": "https://www.google.com/s2/favicons?domain=neon.tech&sz=128",
+    "llms": "https://neon.tech/docs/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/projects"
+  }
+}

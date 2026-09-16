@@ -1,0 +1,19 @@
+{
+  "id": "newrelic",
+  "url": {
+    "host": "api.newrelic.com"
+  },
+  "headers": {
+    "Api-Key": "kv('NEW_RELIC_API_KEY')"
+  },
+  "meta": {
+    "label": "New Relic",
+    "description": "Application performance monitoring and observability",
+    "docs": "https://docs.newrelic.com/docs/apis/",
+    "icon": "https://www.google.com/s2/favicons?domain=newrelic.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v2/licenses.json"
+  }
+}

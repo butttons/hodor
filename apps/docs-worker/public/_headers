@@ -1,0 +1,20 @@
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+/prism.js
+  Cache-Control: public, max-age=86400
+/logo.svg
+  Cache-Control: public, max-age=86400
+/logo_16.png
+  Cache-Control: public, max-age=86400
+/logo_32.png
+  Cache-Control: public, max-age=86400
+/logo_64.png
+  Cache-Control: public, max-age=86400
+/logo_128.png
+  Cache-Control: public, max-age=86400
+/logo_256.png
+  Cache-Control: public, max-age=86400
+/logo_512.png
+  Cache-Control: public, max-age=86400
+/diagram.svg
+  Cache-Control: public, max-age=86400

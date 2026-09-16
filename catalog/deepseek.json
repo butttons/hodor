@@ -1,0 +1,20 @@
+{
+  "id": "deepseek",
+  "url": {
+    "host": "api.deepseek.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('DEEPSEEK_API_KEY')"
+  },
+  "meta": {
+    "label": "DeepSeek",
+    "description": "Open-weight LLMs (chat and reasoning), OpenAI-compatible",
+    "docs": "https://platform.deepseek.com/api-docs",
+    "icon": "https://www.google.com/s2/favicons?domain=deepseek.com&sz=128",
+    "llms": "https://api-docs.deepseek.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/models"
+  }
+}

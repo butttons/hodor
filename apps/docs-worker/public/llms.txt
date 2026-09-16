@@ -1,0 +1,553 @@
+# hodor
+
+> One URL per API, credentials handled. A reverse proxy that stores your API
+> credentials once and injects them on every request — register an integration,
+> get a stable subdomain like `https://<label>.example.com`, and any tool that
+> speaks HTTPS can use it without ever holding a key.
+
+A token-injecting reverse proxy for Cloudflare Workers (or a standalone Node/Bun
+server). Configure a registry item once, get `https://<label>.example.com`,
+and hodor injects your `Authorization` (or any header) automatically upstream.
+
+## Model
+
+- **Subdomain routing, no path routing, ever.** The first label of the host IS
+  the route: `openai.example.com` → registry item `openai`.
+- A **registry** is a set of named items, each with a target URL and a set of
+  header/query templates written in **JEXL**.
+- Header values are pure JEXL. Static values are string literals
+  (`"'application/json'"`); credentials come from `kv()` (encrypted store),
+  `secret()` (plain worker secret binding) or `secret_store()` (a Cloudflare
+  Secrets Store binding, e.g. `secret_store('ACME__API_KEY')`).
+- The whole config is managed at runtime through the **admin API** — you never
+  edit source or redeploy to change an integration.
+
+## Links
+
+- Site: https://hodor.ing
+- Catalog (browse/search integrations): https://hodor.ing/catalog
+  (build-time snapshot of `catalog/*.json`; search endpoint `/catalog/search?q=`)
+- Repo: https://github.com/butttons/hodor
+- Full agent-facing spec: this file.
+
+## Two workers, one zone
+
+| Worker | Route | Serves |
+|--------|-------|--------|
+| `hodor-docs` | `example.com` (custom domain) | this docs site |
+| `hodor-proxy` | `*.example.com/*` (worker route) | the proxy + admin API |
+
+The admin API and the reverse proxy live on the **proxy worker** — reach any
+request at `https://<label>.example.com/...` (e.g. `app.example.com`). The proxy
+deliberately sits at the **first level** (`*.example.com`) so Cloudflare's free
+Universal SSL covers it — see [DNS & TLS](#dns--tls).
+
+## Install & deploy
+
+One worker does all the work: the **proxy worker** (a second, optional docs
+worker just hosts this site). It needs these bindings/secrets:
+
+| Kind | Name | Purpose |
+|---|---|---|
+| KV namespace | `HODOR_KV` | encrypted secrets + registry storage |
+| Secret | `HODOR_ENCRYPTION_KEY` | AES-GCM master key (`openssl rand -base64 32`) |
+| Secret | `HODOR_JWT_SECRET` | signs minted API keys (`openssl rand -hex 32`) |
+| Var | `HODOR_APP_URL` | main/apex host (e.g. `https://example.com`) |
+| Var | `HODOR_CATALOG_RAW_BASE` | catalog source (defaults to the public repo) |
+| Analytics Engine | `HODOR_ANALYTICS` | audit traffic log (`hodor_traffic`) |
+| Secrets Store (optional) | per-item | e.g. `ACME__API_KEY` via `secrets_store_secrets` |
+
+The two secrets are declared as required in `secrets.required` — the **first**
+deploy uploads them from a file (`--secrets-file`, `.env` or JSON), later
+deploys are plain `wrangler deploy` (secrets persist across deployments).
+
+### One-click (Deploy to Cloudflare)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/butttons/hodor/tree/main/apps/proxy-worker)
+
+Instant deploy of the proxy worker. Cloudflare reads `wrangler.jsonc` and
+**auto-provisions `HODOR_KV`** (updating the namespace id); the two secrets are
+captured on the setup page (`cloudflare.bindings` in `package.json` describes
+what to put in each). Then add the DNS record below.
+
+### Manual
+
+```bash
+# 1. zone in Cloudflare, then KV namespace
+npx wrangler kv namespace create HODOR_KV   # paste id into apps/proxy-worker/wrangler.jsonc
+
+# 2. the two required secrets — first deploy only, from a file (.env format):
+#    HODOR_ENCRYPTION_KEY=<openssl rand -base64 32>
+#    HODOR_JWT_SECRET=<openssl rand -hex 32>
+cd apps/proxy-worker
+npx wrangler deploy --secrets-file .dev.vars
+# …later deploys are normal:
+# npx wrangler deploy
+```
+
+(Or set secrets once via `npx wrangler secret put HODOR_ENCRYPTION_KEY` /
+`HODOR_JWT_SECRET`, then just `npx wrangler deploy`.)
+
+**DNS records** (in the zone's DNS tab): one proxied wildcard record so any
+subdomain reaches the worker:
+
+| Type | Name | Content | Proxy |
+|---|---|---|---|
+| A | `*.example.com` | `192.0.2.0` | Proxied (orange cloud) |
+
+(`192.0.2.0` is a dummy RFC-5737 address; the worker route handles the actual
+routing, the record only needs to be proxied.) Worker **routes** do not create
+DNS records — the wildcard A must be added manually; Custom Domains (which
+auto-create DNS) only support single hostnames, not wildcards.
+
+**DNS + TLS guidance.**
+
+- **Apex & first level — just work.** `example.com` and `*.example.com` are
+  covered by Cloudflare's free **Universal SSL** with zero cert configuration.
+  This is why the proxy lives at `*.example.com` (first level) rather than
+  deeper: routing works at any depth (a wildcard route matches all subhosts),
+  but **certificates are single-level** — the wall is always TLS, never DNS.
+- **Second+ level subdomains** — e.g. `work.openai.example.com` — are *not*
+  covered by Universal SSL. Wildcard certs cover exactly one level. Options:
+  - **Total TLS** (paid — Advanced Certificate Manager add-on, ~$10/mo per
+    zone): auto-issues a certificate for every proxied hostname, any depth.
+  - **Custom certificate** — the custom-certificates upload is gated behind
+    the **Business plan**.
+  - A plain VPS with Caddy `on_demand_tls` gives free any-depth certs, but
+    that drops the Workers deployment entirely.
+
+## Updating
+
+Your `wrangler.jsonc` is never overwritten — all bindings, secrets, and
+settings are preserved. Back up local changes first (anything other than
+`wrangler.jsonc` is discarded).
+
+### GitHub Actions (recommended)
+
+The deploy snapshot keeps the **Update Worker** action (in `./.github/workflows/update.yml`):
+
+1. Go to your worker repo → **Actions** → **Update Worker**
+2. Click **Run workflow** — optionally enter a version tag (e.g. `v0.1.0`), or
+   leave empty for the latest release
+3. The workflow downloads the release source, preserves your `wrangler.jsonc`,
+   and commits the update
+
+### Manual (git)
+
+The Deploy button creates a private repo **from a snapshot, not a fork**, so the
+first merge from upstream needs `--allow-unrelated-histories`:
+
+```bash
+git remote add upstream https://github.com/butttons/hodor.git   # first time
+cp wrangler.jsonc wrangler.jsonc.bak
+
+git fetch upstream
+git merge -X theirs upstream/main --allow-unrelated-histories \
+  -m "Update from upstream"                                     # first update
+# git merge -X theirs upstream/main -m "Update from upstream"   # later updates
+
+mv wrangler.jsonc.bak wrangler.jsonc
+npx wrangler deploy
+```
+
+## Quickstart (local)
+
+```bash
+git clone git@github.com:butttons/hodor.git && cd hodor
+pnpm install
+cp apps/proxy-worker/.dev.vars.example apps/proxy-worker/.dev.vars
+#   fill in HODOR_ENCRYPTION_KEY (openssl rand -base64 32) and
+#   HODOR_JWT_SECRET     (openssl rand -hex 32)
+pnpm --filter @hodor/proxy-worker dev          # → http://localhost:8787
+```
+
+Mint an admin key (the work is locked behind JWTs; minting is the only open path):
+
+```bash
+SECRET=$(grep '^HODOR_JWT_SECRET=' apps/proxy-worker/.dev.vars | cut -d= -f2-)
+TOKEN=$(curl -s -X POST http://localhost:8787/_/keys \
+  -H 'content-type: application/json' \
+  --data "{\"secret\":\"$SECRET\",\"name\":\"admin\",\"scopes\":[\"admin\"]}" | jq -r .token)
+```
+
+> Production vs local: `.dev.vars` holds the **local-dev** `HODOR_JWT_SECRET`.
+> Minting against the *deployed* worker requires the **production** secret
+> (the one in `wrangler secret`, not `.dev.vars`) — wrong one → `401 Invalid secret`.
+
+Add a secret, register an integration, use it:
+
+```bash
+curl -X PUT -H "X-Authorization: Bearer $TOKEN" \
+  --data-binary '<the-api-key>' http://localhost:8787/_/admin/secrets/OPENAI_API_KEY
+
+curl -X PATCH http://localhost:8787/_/admin/registry/openai \
+  -H "X-Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  --data '{
+    "id": "openai",
+    "description": "OpenAI API",
+    "url": { "host": "api.openai.com", "path": "/v1" },
+    "headers": { "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')" }
+  }'
+
+# local dev uses a Host header; deployed it's the real subdomain
+curl -H "Host: openai.example.com" http://localhost:8787/v1/models
+# deployed: curl https://openai.example.com/v1/models
+```
+
+The worker resolves `kv('OPENAI_API_KEY')`, builds `Authorization: Bearer …`
+upstream, forwards, and streams the response back.
+
+**Two credentials, two headers.** Your minted JWT travels in
+`X-Authorization`. `Authorization` is reserved for the per-integration auth
+hodor injects upstream; the proxy strips `X-Authorization` before forwarding,
+so your JWT never reaches the upstream service.
+
+## The `proxyItem` schema
+
+```ts
+{
+  id: string          // /^[a-z][a-z0-9-]{0,62}$/  subdomain-safe label
+  url: { host: string; path?: string /* default "/" */ }
+  headers: Record<string, string>      // JEXL expressions
+  query?: Record<string, string>       // query-param injection (JEXL)
+  variables?: Record<string, string>   // {var} tokens in host/path, documented
+  identifiers?: Record<string, string> // non-secret facts for consumers
+                                       // (project/zone IDs, datasets, region)
+                                       // surfaced verbatim in reflection
+  meta: {
+    label: string      // display name
+    description: string
+    docs?: string      // human docs URL
+    openapi?: string   // machine-readable OpenAPI spec URL
+    llms?: string      // agent-friendly llms.txt URL
+    icon?: string      // icon image URL
+    note?: string      // free-form note surfaced in reflection
+  }
+  probe?: { method: "GET"|"POST"|"PUT"|"PATCH"|"DELETE"; path: string }
+}
+```
+
+`templateString` values must compile as valid JEXL — enforced at validate time,
+so bad expressions surface before any request.
+
+## Header expressions (JEXL)
+
+- Values are **pure JEXL**, normal jexl rules — no `${}` transpiler.
+- Static values are JEXL string literals: `"'application/json'"`.
+- `kv(name, namespace?)` — the credential resolver (encrypted secret store).
+- `secret('NAME')` — a plain worker secret binding (`env.NAME`), fail-closed
+  if absent.
+- `secret_store('NAME')` — a Cloudflare Secrets Store binding
+  (`env.NAME.get()`), fail-closed if the binding has no `.get()`.
+- Built-in helpers (reserved; cannot be shadowed): `base64`, `base64url`,
+  `json`, `upper`, `lower`, `trim`, `urlencode`.
+- `variable('NAME')` — a plain-text env value (non-secret config), coerced to
+  string.
+- `process_env('NAME')` — host `process.env[NAME]`, for the standalone Node/Bun
+  server (empty on Workers — reads the actual process even without bindings).
+- Fail-closed: unknown functions, unsupported result types, and unknown/empty
+  secrets throw a normalized `HeaderExpressionError`.
+
+**Secrets discipline (dogfooding rule).** Passwords/tokens/keys → worker secrets
+(`kv()` / `secret()` / `secret_store()`) + local secret files (never committed).
+IDs/usernames/account IDs → plain `vars` + `variable()` in templates. Example:
+`'Basic ' + base64(variable('MIXPANEL_USERNAME') + ':' + secret('MIXPANEL_PASSWORD'))`.
+Every `.dev.vars` line should be consumed by a live template — prune orphans.
+
+## Keys & permissions
+
+Keys are HS256 JWTs signed with `HODOR_JWT_SECRET`. Scopes: `proxy:call` (may
+use the proxy) and/or `admin` (may use `/_admin`). Restrictions use one
+vocabulary — `only` (permit-list) and `except` (deny-list), each
+`{methods?, paths?}` — globally and per integration:
+
+```json
+{
+  "scopes": ["proxy:call"],
+  "integrations": [
+    {"id": "stripe"},
+    {"id": "razorpay", "only": {"methods": ["GET", "HEAD"]}}
+  ],
+  "only": {"paths": ["/v1/*"]},
+  "except": {"methods": ["DELETE"]}
+}
+```
+
+Evaluation per request: scope → item listed → item `except` → item `only` →
+global `except` → global `only`. `except` always wins; per-item rules narrow
+the globals (never widen). Path entries are Hono-style (`/v1/models`) or
+`METHOD /path` strings (`GET /v1/models`); methods match case-insensitively.
+
+Key `name`s are unique among live keys — re-minting a live name returns
+`409` with the holder's jti (revoke first). Revocation is one KV entry per
+key (`revoked:<jti>`), effective within ~30s across isolates (listing lags
+~30s after a 204 — re-check before declaring dead). Revocation is admin-only;
+a proxy token gets 403 on revoke attempts.
+
+Canonical shell is the `hcurl` executable (on `PATH`), with tokens in
+`~/.hodor-env` (chmod 600, never commit) — no rc file, no exports; rc
+functions don't survive to agents, cron, or non-interactive ssh:
+
+```bash
+#!/bin/bash
+. ~/.hodor-env
+exec curl -sS -H "X-Authorization: Bearer $HPT" "https://$1" "${@:2}"
+# usage: hcurl openai.example.com/v1/models | jq
+```
+```bash
+export HPT='<proxy-token>'
+export HAT='<admin-token>'
+```
+
+Agents/cron (no interactive shell): the two files above are the whole setup —
+bare `hcurl` needs zero preamble. See the canonical skill.
+
+- `$HPT` — proxy token, service subdomains only. `$HAT` — admin token, apex
+  control plane only (human workstation, never on VMs/servers).
+- Never add `Authorization` to hodor calls — it is stripped before the upstream
+  credential is stamped. The hodor JWT rides in `X-Authorization` only.
+- Use `jq` for JSON plumbing (`jq -r .token`, `jq '.keys[] | ...'`).
+- Rotate revoke-first (enforced by the 409):
+
+```bash
+J=$(curl -s https://example.com/_/admin/keys -H "X-Authorization: Bearer $HAT" \
+  | jq -r '.keys[] | select(.name=="<name>") | .jti')
+curl -s -X DELETE "https://example.com/_/admin/keys/$J" -H "X-Authorization: Bearer $HAT"
+# then mint same name, update its storage, verify 200 through the proxy
+```
+
+Identity headers stamped on every proxied request (and stripped if a client
+forges them):
+`X-Hodor-Key` (minted key name), `X-Hodor-Key-Id` (jti), `X-Hodor-Ctx`
+(optional consumer context claim).
+
+## Audit logging (always on)
+
+Every request to the proxy records one data point in the Analytics Engine
+dataset **`hodor_traffic`** — there is no toggle, and it is recorded on **every
+terminal outcome**, not just successful proxied calls. Control-surface
+mutations (non-GET on `/_/keys` + `/_/admin/*`) record one point each in
+**`hodor_audit_log`** (actor jti, method, path, status):
+
+| Outcome | `status` recorded |
+|---|---|
+| Missing/invalid token | `401` |
+| Scope / item / path / method denied | `403` |
+| Unknown integration label | `404` |
+| Upstream fetch failed (DNS/conn/timeout) | `0` (never a real HTTP status) |
+| Successful proxied call | the upstream HTTP status |
+
+Data point layout (stable — do not change without updating everywhere):
+`indexes[0] = <itemId>:<keyJti>`, `doubles = [status, durationMs, methodWeight]`
+(`methodWeight` 1 = read, 2 = write), `blobs = [itemId, keyJti, keyName, method,
+path, status]`. `itemId`/`keyJti` are empty strings when unknown (e.g.
+unauthenticated requests, where only the host label is known).
+
+Query it from the dashboard (Analytics → Analytics Engine → `hodor_traffic`), e.g.:
+
+```sql
+SELECT blob1 AS itemId, blob2 AS keyJti, double1 AS status, COUNT() AS n
+FROM hodor_traffic
+WHERE timestamp > NOW() - INTERVAL '7' DAY
+GROUP BY blob1, blob2, double1
+ORDER BY n DESC
+```
+
+Note: Analytics Engine SQL uses `COUNT()` (no `*`) — `COUNT(*)` errors.
+
+## Querying traffic over HTTP (dogfood through Hodor itself)
+
+If you registered a Cloudflare integration (read-only account token with
+`Account Analytics` read is enough), query both datasets through the proxy —
+same header, upstream API unchanged:
+
+```bash
+hcurl cloudflare.example.com/accounts/<ACCOUNT_ID>/analytics_engine/sql \
+  -X POST --data "SELECT COUNT() AS n FROM hodor_traffic WHERE timestamp > NOW() - INTERVAL '7' DAY"
+```
+
+The body is raw SQL; the response is JSON (`{data, meta, rows}`). Column dictionary
+(positions are stable — new fields append, never insert):
+
+`hodor_traffic` — one row per proxied request, incl. 401/403/404 rejections:
+
+| column | meaning |
+|---|---|
+| `timestamp` | event time (all queries filter on this) |
+| `index1` | `itemId:keyJti` — the WHERE filter |
+| `double1` | terminal status (`0` = upstream fetch itself failed) |
+| `double2` | duration, ms |
+| `double3` | weight: 1 = read, 2 = write |
+| `blob1` | integration item id |
+| `blob2` | minted key jti |
+| `blob3` | minted key name ("" when unknown) |
+| `blob4` | HTTP method |
+| `blob5` | request path |
+| `blob6` | status, string form |
+| `blob7` | client IP |
+| `blob8` | user agent (capped) |
+
+`hodor_audit_log` — one row per control-surface mutation (reads excluded):
+
+| column | meaning |
+|---|---|
+| `timestamp` | event time |
+| `index1` | actor key jti — the WHERE filter (who did it) |
+| `double1` | terminal status |
+| `blob1` | request path (includes ids, e.g. revoked key jti) |
+| `blob2` | HTTP method |
+| `blob3` | actor key name ("" for unauth’d `POST /_/keys` — no JWT yet) |
+| `blob4` | detail (minted key name for mints, else "") |
+| `blob5` | status, string form |
+| `blob6` | client IP |
+| `blob7` | user agent (capped) |
+
+Alias every column (self-documenting queries — never select bare `blob3`):
+
+```sql
+-- volume by integration, 7 days
+SELECT blob1 AS item, COUNT() AS n FROM hodor_traffic
+WHERE timestamp > NOW() - INTERVAL '7' DAY GROUP BY item ORDER BY n DESC LIMIT 20;
+-- denials and errors (401/403/404/0), 24h
+SELECT blob1 AS item, double1 AS status, COUNT() AS n FROM hodor_traffic
+WHERE timestamp > NOW() - INTERVAL '1' DAY AND double1 != 200
+GROUP BY item, status ORDER BY n DESC;
+-- one consumer's traffic
+SELECT blob1 AS item, COUNT() AS n FROM hodor_traffic
+WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob3 = '<key-name>'
+GROUP BY item ORDER BY n DESC;
+-- recent control-plane mutations
+SELECT blob1 AS path, blob2 AS method, blob3 AS actor, COUNT() AS n
+FROM hodor_audit_log WHERE timestamp > NOW() - INTERVAL '7' DAY
+GROUP BY path, method, actor ORDER BY n DESC LIMIT 20;
+-- mint history (what was minted, how often)
+SELECT blob4 AS minted_key, COUNT() AS n FROM hodor_audit_log
+WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob1 = '/_/keys'
+GROUP BY minted_key ORDER BY n DESC;
+-- revokes by key jti
+SELECT blob1 AS revoked_path, COUNT() AS n FROM hodor_audit_log
+WHERE timestamp > NOW() - INTERVAL '7' DAY AND blob2 = 'DELETE'
+GROUP BY revoked_path ORDER BY n DESC LIMIT 20;
+```
+
+## Admin API
+
+All routes except `POST /_/keys` require a valid JWT with `admin` scope,
+sent as `X-Authorization: Bearer <jwt>`. Deployed base:
+`https://<label>.example.com` — or the apex if a custom domain is attached
+(e.g. `https://example.com/_/admin/...`).
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET`    | `/_/admin/secrets[?namespace=]`       | list secret names (never values) |
+| `PUT`    | `/_/admin/secrets/:name[?namespace=]` | create/update a secret (body = plaintext) |
+| `DELETE` | `/_/admin/secrets/:name[?namespace=]` | delete (409 if still referenced) |
+| `GET`    | `/_/admin/registry`                   | full registry |
+| `PUT`    | `/_/admin/registry`                   | replace whole registry (GET, merge locally, PUT back) |
+| `PATCH`  | `/_/admin/registry/:id`               | upsert one item (preferred for adding a single integration) |
+| `DELETE` | `/_/admin/registry/:id`               | delete one item |
+| `POST`   | `/_/keys` (unauth'd)                  | mint an API key (body `secret` = `HODOR_JWT_SECRET`; names unique among live keys, dup → 409) |
+| `DELETE` | `/_/admin/keys/:jti`                  | revoke a minted key (denylist) |
+| `GET`    | `/_/admin/keys/revoked`               | list revoked key jtis |
+| `GET`    | `/_/admin/keys`                       | list minted keys (ledger: metadata, newest first, `revoked`/`expired` flags) |
+| `POST`   | `/_/admin/rekey`                      | rotate `HODOR_ENCRYPTION_KEY`: re-encrypt all secrets (body = `oldKey`) |
+| `GET`    | `/_/admin/enrich?domain=stripe.com`   | scaffold a proxyItem from integrations.sh |
+| `GET`    | `/_/admin/catalog/summary`            | overview of all catalog integrations (requires a public `HODOR_CATALOG_RAW_BASE` repo — private repos 404) |
+| `GET`    | `/_/admin/catalog[?q=]`               | search the built-in catalog (live GitHub) |
+| `GET`    | `/_/admin/catalog/:id`                | fetch one catalog integration shape |
+| `GET`    | `/_/admin/health`                     | readiness (KV + encryption key probe) |
+| `GET`    | `/_/admin/info`                       | summary (item count, namespaces) |
+
+Interactive docs: `/_/admin/docs` (Scalar) · OpenAPI: `/_/admin/openapi.json`.
+
+**`GET /_/admin/registry/:id` is not an admin read** — it falls through to the
+proxy handler (needs `proxy:call`, returns the upstream response). The admin
+list read is `GET /_/admin/registry`.
+
+**Main-host only:** the whole control surface (`/_/keys`, `/_/admin/*`, `/_/reflection`)
+serves the main/apex host only — check `HODOR_APP_URL`'s host. Subdomains are pure
+forwarders: every path (including `/_/...`) goes through the proxy to the registry target.
+Any valid token (`proxy:call` or `admin`) may read `/_/reflection`, and a token
+restricted by `integrations` only sees its permitted services.
+
+## Troubleshooting (paid for in dogfooding)
+
+- `401 Invalid secret` on mint → you used the local `.dev.vars` secret against
+  the deployed worker (or vice versa). Use the production `HODOR_JWT_SECRET`.
+- `7003 Could not route` (Cloudflare) → truncated account/zone ID. Use the full
+  ID from the dashboard, not the display prefix.
+- Slack `200 {"ok":false}` → read the body, not the status. Always send
+  `Content-Type: application/json`.
+- Linear `401/403` with Bearer → the key goes in raw, no `Bearer` prefix.
+- Axiom `{"code":602}` → `startTime` missing in the query body.
+- Cloudflare audit 400 → `since` AND `before` are both mandatory.
+- Mixpanel XML `AuthenticationRequired` → wrong host. Query API is
+  `mixpanel.com/api` (service-account basic); `api.mixpanel.com` is
+  ingestion-only, `data.mixpanel.com` is export (project-secret auth).
+- Customer.io 401 `wrong datacenter` → US credential on EU host or vice versa.
+  App API (Bearer app key) ≠ Track API (Basic site_id:key).
+- Pouch 404 on `/collection` → routes are plural (`/collections`).
+- `409` on mint → name live. Revoke first, then mint (listing lags ~30s).
+- Two Cloudflare accounts locally → bare `wrangler kv …` needs
+  `CLOUDFLARE_ACCOUNT_ID=<id>` or a pinned `account_id` in `wrangler.jsonc`.
+
+## Standalone (Node/Bun, no Cloudflare)
+
+The KV binding is abstracted behind unstorage: on Workers it uses the
+`HODOR_KV` namespace; standalone it's memory by default or an `fs` directory
+(`HODOR_KV_DATA_DIR`, default `.data/kv`). Analytics writes are deferred and
+dropped outside Workers (no binding). Routing is still by the **first label of
+the Host header**:
+
+```bash
+cp apps/proxy-worker/.dev.vars.example apps/proxy-worker/.dev.vars
+pnpm --filter @hodor/proxy-worker dev:node        # → http://localhost:3000
+curl -H "Host: openai.localhost" http://localhost:3000/v1/models
+```
+
+## Environment reference
+
+| var | where | purpose |
+|---|---|---|
+| `HODOR_ENCRYPTION_KEY`   | secret | AES-GCM master key for the encrypted secret store |
+| `HODOR_JWT_SECRET`       | secret | signs minted API keys (JWTs) |
+| `HODOR_CATALOG_RAW_BASE` | var    | GitHub raw base for the built-in catalog |
+| `HODOR_APP_URL`          | var    | base URL used in OpenAPI docs |
+| `HODOR_KV_DRIVER`         | runtime (standalone) | `memory` or `fs` backend |
+| `HODOR_KV_DATA_DIR`       | runtime (standalone) | fs-backed KV directory (default `.data/kv`) |
+
+Bindings (wrangler-generated `Env`): `HODOR_KV` (KV namespace),
+`HODOR_ANALYTICS` (Analytics Engine dataset `hodor_traffic`) and `HODOR_AUDIT`
+(Analytics Engine dataset `hodor_audit_log`).
+
+## Security
+
+- **Live on the edge.** Keys are JWTs signed with `HODOR_JWT_SECRET`;
+  `@hono/zod-validator` guards every admin/keys handler; errors return a flat
+  `{code,message,status}` envelope.
+- **Secrets** are stored as AES-GCM ciphertext in KV (`s:<ns>:<NAME>` →
+  `{v,n,c}`) under `HODOR_ENCRYPTION_KEY`.
+- **Revocation** is a `jti` denylist (`DELETE /_/admin/keys/:jti`), effective
+  within ~30s across isolates.
+- **Mints** are recorded to a KV ledger under the `key:` prefix — metadata
+  only, never the token; list them with `GET /_/admin/keys`.
+- **Rotation**:
+  - `HODOR_JWT_SECRET` — rotating voids every minted token instantly (the
+    "nuclear" option).
+  - `HODOR_ENCRYPTION_KEY` — rotate by setting the new key as the secret, then
+    `POST /_/admin/rekey` with the *old* key in the body to re-encrypt every
+    `s:*` envelope (no plaintext retained).
+- Threat model: rotation is defense-in-depth; it does not stop an active
+  full-account compromise (account access can read both key and ciphertext).
+
+## Releasing
+
+```bash
+git tag v0.x.y && git push origin v0.x.y
+gh release create v0.x.y --generate-notes --title "Hodor v0.x.y"
+```
+
+Every Deploy-to-Cloudflare-button snapshot self-updates via its in-repo
+**Update Worker** action (pulls the release's `apps/<worker>/` source,
+preserves its own `wrangler.jsonc`). The updater fetches from
+`butttons/hodor` over the public API, so it works once the repo is public.

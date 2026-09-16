@@ -1,0 +1,20 @@
+{
+  "id": "replicate",
+  "url": {
+    "host": "api.replicate.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('REPLICATE_API_TOKEN')"
+  },
+  "meta": {
+    "label": "Replicate",
+    "description": "Run and host open ML models via API",
+    "docs": "https://replicate.com/docs/reference/http",
+    "llms": "https://replicate.com/docs/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=replicate.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/models"
+  }
+}

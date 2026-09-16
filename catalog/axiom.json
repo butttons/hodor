@@ -1,0 +1,22 @@
+{
+  "id": "axiom",
+  "url": {
+    "host": "api.axiom.co"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('AXIOM_API_KEY')"
+  },
+  "meta": {
+    "label": "Axiom",
+    "description": "Axiom data ingestion API",
+    "docs": "https://axiom.co/docs/restapi/introduction",
+    "llms": "https://axiom.co/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=axiom.co&sz=128",
+    "openapi": "https://raw.githubusercontent.com/axiomhq/docs/main/content/docs/%28api-reference%29/restapi/versions/v2.json",
+    "note": "Query bodies require startTime (omitting it returns code 602). EU region is eu-central-1."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/datasets"
+  }
+}

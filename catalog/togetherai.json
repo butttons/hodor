@@ -1,0 +1,20 @@
+{
+  "id": "togetherai",
+  "url": {
+    "host": "api.together.xyz"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('TOGETHER_API_KEY')"
+  },
+  "meta": {
+    "label": "Together AI",
+    "description": "Open-source LLM inference, fine-tuning, and embeddings",
+    "docs": "https://docs.together.ai/reference",
+    "llms": "https://docs.together.ai/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=together.xyz&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/models"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "render",
+  "url": {
+    "host": "api.render.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('RENDER_API_KEY')"
+  },
+  "meta": {
+    "label": "Render",
+    "description": "Managed cloud hosting for apps and databases",
+    "docs": "https://api-docs.render.com",
+    "icon": "https://www.google.com/s2/favicons?domain=render.com&sz=128",
+    "llms": "https://api-docs.render.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v1/services"
+  }
+}

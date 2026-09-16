@@ -1,0 +1,21 @@
+{
+  "id": "doppler",
+  "url": {
+    "host": "api.doppler.com",
+    "path": "/v3"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('DOPPLER_TOKEN')"
+  },
+  "meta": {
+    "label": "Doppler",
+    "description": "Secrets management and environment configuration",
+    "docs": "https://docs.doppler.com/reference",
+    "icon": "https://www.google.com/s2/favicons?domain=doppler.com&sz=128",
+    "llms": "https://docs.doppler.com/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/configs"
+  }
+}

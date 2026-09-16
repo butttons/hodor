@@ -1,0 +1,20 @@
+{
+  "id": "kimi-coding",
+  "url": {
+    "host": "api.kimi.com",
+    "path": "/coding"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('KIMI_API_KEY')"
+  },
+  "meta": {
+    "label": "Kimi Coding",
+    "description": "Moonshot Kimi coding plan (Anthropic Messages shape)",
+    "docs": "https://platform.moonshot.ai",
+    "icon": "https://www.google.com/s2/favicons?domain=kimi.com&sz=128"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/v1/messages"
+  }
+}

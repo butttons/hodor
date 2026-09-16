@@ -1,0 +1,21 @@
+{
+  "id": "discord",
+  "url": {
+    "host": "discord.com",
+    "path": "/api"
+  },
+  "headers": {
+    "Authorization": "'Bot ' + kv('DISCORD_BOT_TOKEN')"
+  },
+  "meta": {
+    "label": "Discord",
+    "description": "Discord bot and user API",
+    "docs": "https://discord.com/developers/docs",
+    "llms": "https://discord.com/developers/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=discord.com&sz=128"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/v10/users/@me"
+  }
+}

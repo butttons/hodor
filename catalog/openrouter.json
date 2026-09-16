@@ -1,0 +1,21 @@
+{
+  "id": "openrouter",
+  "url": {
+    "host": "openrouter.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('OPENROUTER_API_KEY')"
+  },
+  "meta": {
+    "label": "OpenRouter",
+    "description": "One API gateway to many LLM providers",
+    "docs": "https://openrouter.ai/docs",
+    "llms": "https://openrouter.ai/docs/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=openrouter.ai&sz=128",
+    "openapi": "https://openrouter.ai/openapi.json"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/api/v1/models"
+  }
+}

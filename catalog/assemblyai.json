@@ -1,0 +1,20 @@
+{
+  "id": "assemblyai",
+  "url": {
+    "host": "api.assemblyai.com"
+  },
+  "headers": {
+    "Authorization": "kv('ASSEMBLYAI_API_KEY')"
+  },
+  "meta": {
+    "label": "AssemblyAI",
+    "description": "Speech-to-text transcription and audio intelligence",
+    "docs": "https://www.assemblyai.com/docs/api-reference",
+    "icon": "https://www.google.com/s2/favicons?domain=assemblyai.com&sz=128",
+    "llms": "https://www.assemblyai.com/docs/llms.txt"
+  },
+  "probe": {
+    "method": "POST",
+    "path": "/v2/transcript"
+  }
+}

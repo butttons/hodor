@@ -1,0 +1,23 @@
+{
+  "id": "notion",
+  "url": {
+    "host": "api.notion.com",
+    "path": "/v1"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('NOTION_API_KEY')",
+    "Notion-Version": "'2022-06-28'"
+  },
+  "meta": {
+    "label": "Notion",
+    "description": "Connected workspace for notes, docs, and databases",
+    "docs": "https://developers.notion.com/reference",
+    "llms": "https://developers.notion.com/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=notion.com&sz=128",
+    "openapi": "https://developers.notion.com/openapi.json"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/users/me"
+  }
+}

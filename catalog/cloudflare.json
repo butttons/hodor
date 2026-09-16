@@ -1,0 +1,23 @@
+{
+  "id": "cloudflare",
+  "url": {
+    "host": "api.cloudflare.com",
+    "path": "/client/v4"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + kv('CLOUDFLARE_API_TOKEN')"
+  },
+  "meta": {
+    "label": "Cloudflare",
+    "description": "CDN, DNS, and edge network management",
+    "docs": "https://developers.cloudflare.com/api/",
+    "llms": "https://developers.cloudflare.com/api/llms.txt",
+    "icon": "https://www.google.com/s2/favicons?domain=cloudflare.com&sz=128",
+    "openapi": "https://raw.githubusercontent.com/cloudflare/api-schemas/main/openapi.json",
+    "note": "Account API tokens fail /user/tokens/verify by design (user-scoped) \u2014 probe GET /accounts/{id}. Audit logs need since AND before. Use full account IDs, not display prefixes (7003 otherwise)."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/user/tokens/verify"
+  }
+}

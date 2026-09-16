@@ -1,0 +1,27 @@
+{
+  "name": "hodor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "deploy": "turbo deploy",
+    "cf-typegen": "turbo cf-typegen",
+    "type-check": "turbo type-check",
+    "build": "turbo build",
+    "test": "turbo test",
+    "version:sync": "node scripts/sync-version.mjs",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check ."
+  },
+  "devDependencies": {
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "turbo": "^2.10.12",
+    "typescript": "catalog:"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.8.0"
+}

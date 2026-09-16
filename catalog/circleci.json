@@ -1,0 +1,21 @@
+{
+  "id": "circleci",
+  "url": {
+    "host": "circleci.com",
+    "path": "/api/v2"
+  },
+  "headers": {
+    "Circle-Token": "kv('CIRCLECI_TOKEN')"
+  },
+  "meta": {
+    "label": "CircleCI",
+    "description": "Continuous integration and delivery pipelines",
+    "docs": "https://circleci.com/docs/api/v2/",
+    "icon": "https://www.google.com/s2/favicons?domain=circleci.com&sz=128",
+    "llms": "https://circleci.com/docs/api/v2/llms.txt"
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/me"
+  }
+}
