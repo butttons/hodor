@@ -719,7 +719,7 @@ export HAT='&lt;admin-token&gt;'</code></pre>
         </p>
         <div class="flow">
           <div class="card">
-            <span class="n">STEP 0</span>
+            <span class="n">STEP 1</span>
             <h3>Mint an admin key</h3>
             <p>Knowledge-based: <code>secret</code> must equal <code>HODOR_JWT_SECRET</code> (production, not <code>.dev.vars</code>).</p>
             <pre><code>curl -X POST https://example.com/_/keys \
@@ -727,7 +727,7 @@ export HAT='&lt;admin-token&gt;'</code></pre>
   -d '{"secret":"$HODOR_JWT_SECRET","name":"admin","scopes":["admin"]}'</code></pre>
           </div>
           <div class="card">
-            <span class="n">STEP 1</span>
+            <span class="n">STEP 2</span>
             <h3>Store the key</h3>
             <p>Encrypted at rest; hodor is the only reader.</p>
             <pre><code>curl -X PUT -H "X-Authorization: Bearer $HAT" \
@@ -735,7 +735,7 @@ export HAT='&lt;admin-token&gt;'</code></pre>
   https://example.com/_/admin/secrets/OPENAI_API_KEY</code></pre>
           </div>
           <div class="card">
-            <span class="n">STEP 2</span>
+            <span class="n">STEP 3</span>
             <h3>Register the integration</h3>
             <p>
               Target, auth header (<a href="#secrets">pick a secret helper</a>), optional probe.
@@ -754,7 +754,7 @@ export HAT='&lt;admin-token&gt;'</code></pre>
 JSON</code></pre>
           </div>
           <div class="card">
-            <span class="n">STEP 3</span>
+            <span class="n">STEP 4</span>
             <h3>Call it</h3>
             <p>Credentials injected for you, upstream. Canonical CLI (see Shell setup above):</p>
             <pre><code>hcurl openai.example.com/v1/models</code></pre>

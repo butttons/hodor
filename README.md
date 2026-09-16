@@ -100,19 +100,17 @@ Configure once through a small admin API — no code, no redeploys. Four calls,
 one-time setup (minting is the only open path — everything after needs the key):
 
 ```bash
-# 0. Mint an admin key (secret must equal HODOR_JWT_SECRET — production, not .dev.vars)
+# 1. Mint an admin key (secret must equal HODOR_JWT_SECRET — production, not .dev.vars)
 HAT=$(curl -s -X POST https://example.com/_/keys \
   -H 'content-type: application/json' \
   --data "{\"secret\":\"$HODOR_JWT_SECRET\",\"name\":\"admin\",\"scopes\":[\"admin\"]}" | jq -r .token)
-```
 
-```bash
-# 1. Store the key (encrypted at rest; hodor is the only reader)
+# 2. Store the key (encrypted at rest; hodor is the only reader)
 curl -X PUT -H "X-Authorization: Bearer $HAT" \
   --data-binary '<the-api-key>' \
   https://example.com/_/admin/secrets/OPENAI_API_KEY
 
-# 2. Register the integration (target, auth header, optional probe)
+# 3. Register the integration (target, auth header, optional probe)
 curl -X PATCH https://example.com/_/admin/registry/openai \
   -H "X-Authorization: Bearer $HAT" -H 'content-type: application/json' \
   --data '{
@@ -123,7 +121,7 @@ curl -X PATCH https://example.com/_/admin/registry/openai \
     "probe": { "method": "GET", "path": "/v1/models" }
   }'
 
-# 3. Call it
+# 4. Call it
 hcurl openai.example.com/v1/models
 ```
 
