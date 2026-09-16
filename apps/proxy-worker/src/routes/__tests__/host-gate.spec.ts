@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { sign } from "hono/jwt";
-import app from "../../index";
-import { kvStore } from "../../lib/runtime";
+import app from "@/index";
+import { kvStore } from "@/lib/runtime";
 
 /** Test-only HMAC secret (must match nothing in production). */
 const TEST_SECRET = "test-secret-for-host-gate-spec-only-0123456789";

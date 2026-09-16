@@ -8,9 +8,9 @@
  * `integrations` only sees its permitted services.
  * @module
  */
-import { createRouter } from "../../utils";
-import { getDeps } from "../../deps";
-import { isPermitted, requireScopes } from "../../lib/auth";
+import { createRouter } from "@/utils";
+import { getDeps } from "@/deps";
+import { isPermitted, requireScopes } from "@/lib/auth";
 
 export const reflectionApp = createRouter()
   .use("/", requireScopes("proxy:call", "admin"))

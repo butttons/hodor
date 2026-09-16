@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { auditAdminCall, auditProxyCall, requestMeta } from "../analytics";
+import { auditAdminCall, auditProxyCall, requestMeta } from "@/lib/analytics";
 
 function mockDataset() {
   const points: unknown[] = [];

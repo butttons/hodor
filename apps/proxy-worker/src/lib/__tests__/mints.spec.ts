@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { createStorage } from "unstorage";
 import memoryDriver from "unstorage/drivers/memory";
-import { KeyMintStore } from "../mints";
+import { KeyMintStore } from "@/lib/mints";
 
 /** Fresh isolated store per test — never the process-wide singleton. */
 const freshStore = () => new KeyMintStore({ storage: createStorage({ driver: memoryDriver() }) });

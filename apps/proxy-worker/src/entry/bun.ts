@@ -8,8 +8,8 @@
  * no-op here (no binding); audit writes are deferred and dropped.
  * @module
  */
-import app from "../index";
-import { standaloneExecutionContext } from "../lib/runtime";
+import app from "@/index";
+import { standaloneExecutionContext } from "@/lib/runtime";
 import { loadDevVars } from "./devvars";
 
 loadDevVars();

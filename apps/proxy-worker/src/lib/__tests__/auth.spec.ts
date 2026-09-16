@@ -10,7 +10,7 @@ import {
   requireScopes,
   type AppEnv,
   type Scope,
-} from "../auth";
+} from "@/lib/auth";
 
 /** Test-only HMAC secret (must match nothing in production). */
 const TEST_SECRET = "test-secret-for-auth-spec-only-0123456789";

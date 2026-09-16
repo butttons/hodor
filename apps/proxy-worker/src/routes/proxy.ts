@@ -16,13 +16,13 @@
  * integration label), 0 (upstream fetch error), or the upstream status.
  * @module
  */
-import { createRouter } from "../../utils";
-import { getDeps } from "../../deps";
-import { AppHTTPException, ErrorCodes } from "../../lib/errors";
-import { hasScope, isGloballyAllowed, isItemAllowed, isPermitted } from "../../lib/auth";
-import { consumerIdentityHeaders, IDENTITY_HEADERS } from "../../lib/identity";
-import { buildUpstreamUrl, mergeQuery } from "../../lib/target";
-import { auditProxyCall, requestMeta } from "../../lib/analytics";
+import { createRouter } from "@/utils";
+import { getDeps } from "@/deps";
+import { AppHTTPException, ErrorCodes } from "@/lib/errors";
+import { hasScope, isGloballyAllowed, isItemAllowed, isPermitted } from "@/lib/auth";
+import { consumerIdentityHeaders, IDENTITY_HEADERS } from "@/lib/identity";
+import { buildUpstreamUrl, mergeQuery } from "@/lib/target";
+import { auditProxyCall, requestMeta } from "@/lib/analytics";
 
 const NO_BODY = new Set(["GET", "HEAD"]);
 

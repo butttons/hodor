@@ -4,13 +4,13 @@
  * @module
  */
 import type { Context } from "hono";
-import type { AppEnv } from "./lib/auth";
-import { HeaderExpressionEngine, HeaderExpressionError, type SecretResolver } from "./lib/engine";
-import { getMintStore, KeyMintStore } from "./lib/mints";
-import { RegistryStore } from "./lib/registry";
-import { getRevocationStore, RevocationStore } from "./lib/revocation";
-import { importEncryptionKey, SecretStore } from "./lib/secrets";
-import { runtimeOf, type KeyValueStore, type Runtime } from "./lib/runtime";
+import type { AppEnv } from "@/lib/auth";
+import { HeaderExpressionEngine, HeaderExpressionError, type SecretResolver } from "@/lib/engine";
+import { getMintStore, KeyMintStore } from "@/lib/mints";
+import { RegistryStore } from "@/lib/registry";
+import { getRevocationStore, RevocationStore } from "@/lib/revocation";
+import { importEncryptionKey, SecretStore } from "@/lib/secrets";
+import { runtimeOf, type KeyValueStore, type Runtime } from "@/lib/runtime";
 
 export interface Deps {
   secrets: SecretStore;

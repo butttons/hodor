@@ -8,16 +8,16 @@
  */
 import { Scalar } from "@scalar/hono-api-reference";
 import { zValidator } from "@hono/zod-validator";
-import { createRouter } from "../../utils";
-import { getDeps } from "../../deps";
-import { auditAdminCall, defer, requestMeta } from "../../lib/analytics";
-import { AppHTTPException, ErrorCodes, validationHook } from "../../lib/errors";
-import { getCatalogItem, listCatalog, searchCatalog } from "../../lib/catalog";
-import { enrichDomain } from "../../lib/enrich";
-import { importEncryptionKey } from "../../lib/secrets";
-import { APP_VERSION } from "../../version";
-import { requireScopes } from "../../lib/auth";
-import { assembleOpenApiDocument } from "../../lib/openapi";
+import { createRouter } from "@/utils";
+import { getDeps } from "@/deps";
+import { auditAdminCall, defer, requestMeta } from "@/lib/analytics";
+import { AppHTTPException, ErrorCodes, validationHook } from "@/lib/errors";
+import { getCatalogItem, listCatalog, searchCatalog } from "@/lib/catalog";
+import { enrichDomain } from "@/lib/enrich";
+import { importEncryptionKey } from "@/lib/secrets";
+import { APP_VERSION } from "@/version";
+import { requireScopes } from "@/lib/auth";
+import { assembleOpenApiDocument } from "@/lib/openapi";
 import {
   catalogIdParam,
   enrichQuery,
@@ -28,7 +28,7 @@ import {
   rekeyInput,
   secretNameParam,
   secretNamespaceQuery,
-} from "../../lib/schema";
+} from "@/lib/schema";
 
 /**
  * Scan header template strings for `secret('NAME'[, 'NS'])` references.

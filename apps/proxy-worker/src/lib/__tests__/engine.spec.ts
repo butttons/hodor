@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { HeaderExpressionEngine } from "../engine";
+import { HeaderExpressionEngine } from "@/lib/engine";
 
 /** Build a partial worker env, satisfying the type with just what a test needs. */
 function makeEnv(extra: Record<string, unknown>): Env {

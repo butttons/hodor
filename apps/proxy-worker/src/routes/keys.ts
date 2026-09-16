@@ -7,13 +7,13 @@
  */
 import { sign } from "hono/jwt";
 import { zValidator } from "@hono/zod-validator";
-import { createRouter } from "../../utils";
+import { createRouter } from "@/utils";
 import { z } from "zod";
-import { auditAdminCall, defer, requestMeta } from "../../lib/analytics";
-import { getMintStore } from "../../lib/mints";
-import { getRevocationStore } from "../../lib/revocation";
-import { runtimeOf } from "../../lib/runtime";
-import { AppHTTPException, ErrorCodes, validationHook } from "../../lib/errors";
+import { auditAdminCall, defer, requestMeta } from "@/lib/analytics";
+import { getMintStore } from "@/lib/mints";
+import { getRevocationStore } from "@/lib/revocation";
+import { runtimeOf } from "@/lib/runtime";
+import { AppHTTPException, ErrorCodes, validationHook } from "@/lib/errors";
 
 const SIX_MONTHS = 60 * 60 * 24 * 180;
 

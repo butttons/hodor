@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { Hono } from "hono";
 import { verify } from "hono/jwt";
 
-import type { AppEnv } from "../../../utils";
-import { getMintStore } from "../../../lib/mints";
-import { kvStore } from "../../../lib/runtime";
-import { keysApp } from "../_route";
+import type { AppEnv } from "@/utils";
+import { getMintStore } from "@/lib/mints";
+import { kvStore } from "@/lib/runtime";
+import { keysApp } from "@/routes/keys";
 
 /** Test-only HMAC secret. */
 const TEST_SECRET = "test-secret-for-keys-spec-only-0123456789";
@@ -56,7 +56,7 @@ describe("POST /_admin/keys (unauthenticated mint)", () => {
     const body = (await clash.json()) as { message: string };
     expect(body.message).toContain("dup-key");
     const { jti } = (await first.json()) as { jti: string };
-    const { getRevocationStore } = await import("../../../lib/revocation");
+    const { getRevocationStore } = await import("@/lib/revocation");
     await getRevocationStore(await kvStore({})).revoke(jti);
     const retry = await post({ secret: TEST_SECRET, name: "dup-key", scopes: ["proxy:call"] });
     expect(retry.status).toBe(201);

@@ -2,10 +2,10 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { Hono } from "hono";
 import { sign } from "hono/jwt";
 
-import type { AppEnv } from "../../../utils";
-import { authMiddleware } from "../../../lib/auth";
-import { proxyApp } from "../_route";
-import { kvStore } from "../../../lib/runtime";
+import type { AppEnv } from "@/utils";
+import { authMiddleware } from "@/lib/auth";
+import { proxyApp } from "@/routes/proxy";
+import { kvStore } from "@/lib/runtime";
 
 /** Test-only HMAC secret (must match nothing in production). */
 const TEST_SECRET = "test-secret-for-proxy-spec-only-0123456789";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { RevocationStore } from "../revocation";
-import { kvStore } from "../runtime";
+import { RevocationStore } from "@/lib/revocation";
+import { kvStore } from "@/lib/runtime";
 
 /** A minimal KVNamespace mock storing values in-memory. */
 function mockKV(): KVNamespace {
