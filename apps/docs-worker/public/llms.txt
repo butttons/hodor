@@ -184,9 +184,9 @@ curl -X PATCH http://localhost:8787/_/admin/registry/openai \
   -H "X-Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
   --data '{
     "id": "openai",
-    "description": "OpenAI API",
     "url": { "host": "api.openai.com", "path": "/v1" },
-    "headers": { "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')" }
+    "headers": { "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')" },
+    "meta": { "label": "OpenAI", "description": "OpenAI API" }
   }'
 
 # local dev uses a Host header; deployed it's the real subdomain

@@ -1,27 +1,8 @@
 # hodor
 
-> Hodor holds the door open. This project is the door.
-
 A self-hosted **token-injecting HTTP reverse proxy** — configure an API
 integration once, get a stable subdomain that injects your credentials
-automatically. The self-hosted equivalent of exe.dev-style named proxies.
-
-**Why the name:** each integration is a door. Hodor holds it open, hands your
-credentials through, and lets you in.
-
-## Philosophy
-
-**Why not MCP? Why not an AI gateway?**
-
-If you want MCP, go get an MCP server or gateway — there are good ones. If you
-want model routing, spend controls, and an AI gateway, go get one of those
-too. Hodor is neither.
-
-Hodor does one narrow thing: puts every external service behind one stable
-URL and handles the credentials. It speaks plain HTTPS in and out — any tool
-that can make an HTTP request (curl, a cron, an agent, a browser) can use it.
-Your tools keep their normal HTTP clients; hodor just stamps the credential
-on the way upstream. No SDK, no protocol, no client to adopt.
+automatically.
 
 ## Inspiration
 
@@ -33,35 +14,9 @@ on the way upstream. No SDK, no protocol, no client to adopt.
   and the registry model: integrations you configure once, then point any
   caller at.
 
-## Repo layout
-
-| path                | package               | what                                            |
-| ------------------- | --------------------- | ----------------------------------------------- |
-| `apps/proxy-worker` | `@hodor/proxy-worker` | the deployed proxy (Cloudflare Worker)          |
-| `apps/docs-worker`  | `@hodor/docs-worker`  | docs site (static assets worker) on `hodor.ing` |
-
-The proxy owns `*.hodor.ing` (subdomain routing); the docs own the apex
-`hodor.ing`.
-
-## Commands
-
-```bash
-pnpm install
-pnpm dev            # all apps in dev mode (wrangler dev)
-pnpm type-check     # tsc --noEmit everywhere
-pnpm test           # unit tests
-pnpm build          # standalone server bundles (node + bun, in apps/proxy-worker)
-pnpm deploy         # deploy all workers
-pnpm cf-typegen     # regenerate worker binding types
-```
-
-The proxy also runs as a plain Node/Bun server (no Cloudflare):
-`pnpm --filter @hodor/proxy-worker build && … start:node|start:bun` — see
-[`apps/proxy-worker/README.md`](./apps/proxy-worker/README.md#self-host-on-node-or-bun-no-cloudflare).
-
 ## Deploy to Cloudflare
 
-One worker does all the work; a second worker just hosts this docs site.
+One worker does all the work; a second worker just hosts the docs site.
 
 | Kind              | Name                   | Purpose                                                                               |
 | ----------------- | ---------------------- | ------------------------------------------------------------------------------------- |
@@ -98,6 +53,135 @@ does the real routing, and worker routes don't create DNS records. First-level
 wildcards are covered by Universal SSL — no custom cert. (Custom domains only
 support single hosts, fine for the `hodor.ing` apex.)
 
+## Usage
+
+### How it works
+
+- **One URL per service.** `openai.example.com` _is_ an integration. Subdomain
+  routing — no path config, nothing to remember.
+- **Credentials handled.** Store the key once, encrypted. Hodor builds the auth
+  header at request time — callers never see a credential.
+- **Plain HTTP in and out.** curl, scripts, agents, browsers. If it speaks
+  HTTPS it works.
+
+### Same calls, one key
+
+Four services, four credentials, four leak surfaces — vs the same four calls
+with one hodor key and nothing else. Same curl, same JSON, same responses; the
+URL changed and the keys left the room.
+
+```bash
+# before: one key per service
+curl -X POST https://api.linear.app/graphql -H "Authorization: lin_api_xxxx" \
+  -d '{"query":"{ viewer { name } }"}'
+
+# after: the hodor key, nothing else
+hcurl linear.example.com/graphql -X POST -d '{"query":"{ viewer { name } }"}'
+```
+
+`hcurl` is a tiny shell script — save as `~/.local/bin/hcurl`
+(`chmod +x`), tokens in `~/.hodor-env` (`chmod 600`, never commit):
+
+```bash
+#!/bin/bash
+. ~/.hodor-env
+exec curl -sS -H "X-Authorization: Bearer $HPT" "https://$1" "${@:2}"
+```
+
+```bash
+export HPT='<proxy-token>'
+export HAT='<admin-token>'
+```
+
+### Example
+
+Configure once through a small admin API — no code, no redeploys. Four calls,
+one-time setup (minting is the only open path — everything after needs the key):
+
+```bash
+# 0. Mint an admin key (secret must equal HODOR_JWT_SECRET — production, not .dev.vars)
+HAT=$(curl -s -X POST https://example.com/_/keys \
+  -H 'content-type: application/json' \
+  --data "{\"secret\":\"$HODOR_JWT_SECRET\",\"name\":\"admin\",\"scopes\":[\"admin\"]}" | jq -r .token)
+```
+
+```bash
+# 1. Store the key (encrypted at rest; hodor is the only reader)
+curl -X PUT -H "X-Authorization: Bearer $HAT" \
+  --data-binary '<the-api-key>' \
+  https://example.com/_/admin/secrets/OPENAI_API_KEY
+
+# 2. Register the integration (target, auth header, optional probe)
+curl -X PATCH https://example.com/_/admin/registry/openai \
+  -H "X-Authorization: Bearer $HAT" -H 'content-type: application/json' \
+  --data '{
+    "id": "openai",
+    "url": { "host": "api.openai.com", "path": "/v1" },
+    "headers": { "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')" },
+    "meta": { "label": "OpenAI", "description": "OpenAI API" },
+    "probe": { "method": "GET", "path": "/v1/models" }
+  }'
+
+# 3. Call it
+hcurl openai.example.com/v1/models
+```
+
+### Keys & permissions
+
+One signed JWT per consumer. Restrictions use a single vocabulary — `only` /
+`except` — globally and per integration. `except` always wins; per-item rules
+narrow the globals, never widen.
+
+```json
+{
+  "scopes": ["proxy:call"],
+  "integrations": [
+    { "id": "stripe" },
+    { "id": "razorpay", "only": { "methods": ["GET", "HEAD"] } }
+  ]
+}
+```
+
+Stripe stays broad, Razorpay is read-only — on the same key. Mint at
+`POST /_/keys`, revoke one key without touching the rest.
+
+### Injecting secrets
+
+Header values are JEXL expressions. Five helpers, picked per deployment:
+
+- `kv('NAME')` — hodor's own encrypted KV store. Portable, works everywhere.
+- `secret('NAME')` — plain worker secret binding. Zero extra dependencies.
+- `secret_store('NAME')` — Cloudflare Secrets Store. Strongest isolation.
+- `variable('NAME')` — plain-text env var. IDs, usernames, account IDs — never secrets.
+- `process_env('NAME')` — host `process.env`. Standalone Node/Bun only.
+
+Rule: passwords/tokens/keys → secrets; IDs/usernames → `vars` + `variable()`.
+Example: `'Bearer ' + kv('OPENAI_API_KEY')`. Reserved helper names can't be
+shadowed.
+
+### DNS & TLS
+
+The wildcard (`*.example.com`) is a worker **route**, and routes do not create
+DNS — add the proxied `A` record for `*` pointing at `192.0.2.0` by hand.
+Without it the worker deploys fine and serves nothing. The apex is the
+opposite: attach it as a **custom domain** and Cloudflare provisions DNS +
+certificate automatically. First-level wildcards ride Universal SSL, so no
+certificate setup is needed.
+
+### Security
+
+- **Keys stay encrypted.** Credentials are AES-GCM ciphertext in KV; only
+  hodor can decrypt them, and only at request time. Revoke one key in ~30
+  seconds, or rotate the signing secret to void everything at once.
+- **Complete audit log.** Every request is recorded — who called which
+  integration, when, and what came back — including rejections and upstream
+  failures. Query it over SQL, dashboard or API (see `llms.txt`).
+
+Full reference for humans and agents: [`llms.txt`](./apps/docs-worker/public/llms.txt).
+Live docs: [hodor.ing](https://hodor.ing). No Cloudflare? The same app runs as
+a plain Node/Bun server — see
+[`apps/proxy-worker/README.md`](./apps/proxy-worker/README.md#self-host-on-node-or-bun-no-cloudflare).
+
 ## Updating
 
 Your `wrangler.jsonc` is never overwritten; back up any other local changes
@@ -129,3 +213,15 @@ git tag v0.1.1
 git push origin v0.1.1
 gh release create v0.1.1 --generate-notes --title "Hodor v0.1.1"
 ```
+
+## Hacking on hodor
+
+Repo layout, commands, and conventions live in [`AGENTS.md`](./AGENTS.md).
+
+## Philosophy
+
+Hodor sits underneath whatever you already use — MCP servers and gateways, AI
+gateways, agents, crons, plain scripts. It gives every external service one
+stable URL and handles the credentials, speaking plain HTTPS in and out. Your
+tools keep their normal HTTP clients; hodor stamps the credential on the way
+upstream. No SDK, no protocol, no client to adopt.
