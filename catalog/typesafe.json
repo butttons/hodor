@@ -1,0 +1,16 @@
+{
+  "id": "typesafe",
+  "url": {
+    "host": "api.typesafe.ai"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + secret('JEV_API_KEY')"
+  },
+  "meta": {
+    "label": "TypeSafe",
+    "description": "System One models: typed parallel decisions (choice/score/noul) over unstructured state",
+    "docs": "https://typesafe.ai",
+    "icon": "https://www.google.com/s2/favicons?domain=typesafe.ai&sz=128"
+  },
+  "note": "POST-only API with no GET health endpoint, so no probe. Verify with a minimal POST /v1/systemone (one tiny noul question, fractions of a cent)."
+}
