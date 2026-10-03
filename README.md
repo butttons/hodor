@@ -38,7 +38,7 @@ One worker does all the work; a second worker just hosts the docs site.
 
 | Kind              | Name                   | Purpose                                                                               |
 | ----------------- | ---------------------- | ------------------------------------------------------------------------------------- |
-| KV namespace      | `HODOR_KV`             | encrypted secrets + registry                                                          |
+| KV namespace      | `HODOR_KV`             | encrypted secrets + registry (live-KV mode) / revocation ledger + registry draft (snapshot mode) |
 | Secret (required) | `HODOR_ENCRYPTION_KEY` | AES-GCM master key (`openssl rand -base64 32`)                                        |
 | Secret (required) | `HODOR_JWT_SECRET`     | signs minted API keys (`openssl rand -hex 32`)                                        |
 | Var               | `HODOR_APP_URL`        | main/apex host (the control surface — `/_/admin`, `/_/reflection` — serves here only) |
@@ -86,8 +86,12 @@ export HAT='<admin-token>'
 
 ### Example
 
-Configure once through a small admin API — no code, no redeploys. Four calls,
-one-time setup (minting is the only open path — everything after needs the key):
+Configure once through a small admin API. Four calls, one-time setup
+(minting is the only open path — everything after needs the key). In the
+default live-KV mode writes take effect immediately, no redeploys; in
+snapshot mode (compiled registry) writes return 202 + `redeployRequired` —
+re-pull `GET /_/admin/registry/snapshot` and redeploy (see
+[Compiled registry](#compiled-registry)):
 
 ```bash
 # 1. Mint an admin key (secret must equal HODOR_JWT_SECRET — production, not .dev.vars)
@@ -114,6 +118,37 @@ curl -X PATCH https://example.com/_/admin/registry/openai \
 # 4. Call it
 hcurl openai.example.com/v1/models
 ```
+
+### Compiled registry
+
+Steady state is read-heavy, so deployed workers compile the registry into
+the bundle: the proxy hot path serves it from memory with **zero KV reads**.
+Registry items are safe to bundle — they hold JEXL *references*
+(`secret('NAME')`, `variable('NAME')`) plus non-secret `identifiers`, never
+credential values.
+
+- `src/generated/registry.json` (`{ snapshot: { at, apex, count }, items }`)
+  is baked into the bundle. The committed placeholder
+  (`{ "snapshot": null, "items": {} }`) means live-KV mode: reads fall
+  through to `HODOR_KV`, admin writes take effect immediately. Local dev runs
+  this way.
+- Real snapshots live **only inside deploy copies** (never commit one — the
+  registry holds your integration topology). One curl, run from the copy:
+
+  ```bash
+  curl -s https://<apex>/_/admin/registry/snapshot \
+    -H "X-Authorization: Bearer $HAT" > src/generated/registry.json
+  npx wrangler deploy
+  ```
+
+- Registry edits in snapshot mode: admin writes always go to KV and return
+  **202 + `redeployRequired`** — the proxy keeps serving the compiled bundle
+  until you re-pull the snapshot and redeploy.
+- `GET /_/admin/info` reports `registry.mode` (`snapshot`/`kv`), the snapshot
+  stamp, and draft-vs-deployed drift (`added`/`removed`/`changed`).
+
+Full agent-facing detail (endpoint table, drift shape) lives in
+[`llms.txt`](./apps/docs-worker/public/llms.txt).
 
 ### Keys & permissions
 

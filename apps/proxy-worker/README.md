@@ -23,7 +23,10 @@ Three things your copy needs before it serves traffic:
 HODOR_ENCRYPTION_KEY` / `HODOR_JWT_SECRET`; see `.dev.vars.example` for
    formats.)
 
-2. **A KV namespace** — the worker stores encrypted secrets there:
+2. **A KV namespace** — the worker stores encrypted secrets there (plus the
+   registry in live-KV mode; in snapshot mode KV holds revocations, the mint
+   ledger, and the registry draft — see
+   [Compiled registry](#compiled-registry)):
 
    ```bash
    npx wrangler kv namespace create HODOR_KV
@@ -49,7 +52,15 @@ HODOR_ENCRYPTION_KEY` / `HODOR_JWT_SECRET`; see `.dev.vars.example` for
      auto-provisions DNS + cert.
 
 Then `wrangler deploy` (or just push — connected builds deploy); the secret
-values above get you there on the first run.
+values above get you there on the first run. For the compiled registry
+(zero KV reads on the hot path), pull the snapshot after the first deploy
+and redeploy:
+
+```bash
+curl -s https://<apex>/_/admin/registry/snapshot \
+  -H "X-Authorization: Bearer $HAT" > src/generated/registry.json
+npx wrangler deploy
+```
 
 ## Updating
 
@@ -116,6 +127,26 @@ Environment:
 
 `.dev.vars` is loaded for local runs (real env vars win). Analytics Engine
 writes are a no-op on standalone.
+
+## Compiled registry
+
+Steady state is read-heavy, so deployed workers compile the registry into
+the bundle: the proxy hot path serves it from memory with **zero KV reads**.
+Registry items are safe to bundle — they hold JEXL *references*
+(`secret('NAME')`, `variable('NAME')`) plus non-secret `identifiers`, never
+credential values.
+
+- `src/generated/registry.json` is baked into the bundle. The committed
+  placeholder means live-KV mode (reads from `HODOR_KV`, writes immediate).
+- Real snapshots live **only inside deploy copies** (never commit one): one
+  curl from the copy (above), then redeploy. The endpoint emits the live KV
+  draft even in snapshot mode, so it never exports a stale deploy.
+- Registry edits in snapshot mode return **202 + `redeployRequired`** —
+  re-pull the snapshot and redeploy to take effect.
+- `GET /_/admin/info` reports `registry.mode` (`snapshot`/`kv`), the snapshot
+  stamp, and draft-vs-deployed drift.
+- The hodor-first `rsync` excludes `src/generated/registry.json`, so syncs
+  never clobber a copy's snapshot.
 
 ## Keys & permissions
 

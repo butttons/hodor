@@ -19,8 +19,10 @@ and hodor injects your `Authorization` (or any header) automatically upstream.
   (`"'application/json'"`); credentials come from `kv()` (encrypted store),
   `secret()` (plain worker secret binding) or `secret_store()` (a Cloudflare
   Secrets Store binding, e.g. `secret_store('ACME__API_KEY')`).
-- The whole config is managed at runtime through the **admin API** — you never
-  edit source or redeploy to change an integration.
+- The whole config is managed at runtime through the **admin API**. In live-KV
+  mode (default) writes take effect immediately; in snapshot mode (compiled
+  registry in the bundle — zero KV reads on the hot path) writes land in the
+  KV draft and need a snapshot + redeploy (see [Compiled registry](#compiled-registry)).
 
 ## Links
 
@@ -49,7 +51,7 @@ worker just hosts this site). It needs these bindings/secrets:
 
 | Kind | Name | Purpose |
 |---|---|---|
-| KV namespace | `HODOR_KV` | encrypted secrets + registry storage |
+| KV namespace | `HODOR_KV` | encrypted secrets + registry storage (live-KV mode) / revocation ledger + registry draft (snapshot mode) |
 | Secret | `HODOR_ENCRYPTION_KEY` | AES-GCM master key (`openssl rand -base64 32`) |
 | Secret | `HODOR_JWT_SECRET` | signs minted API keys (`openssl rand -hex 32`) |
 | Var | `HODOR_APP_URL` | main/apex host (e.g. `https://example.com`) |
@@ -442,10 +444,11 @@ sent as `X-Authorization: Bearer <jwt>`. Deployed base:
 | `GET`    | `/_/admin/secrets[?namespace=]`       | list secret names (never values) |
 | `PUT`    | `/_/admin/secrets/:name[?namespace=]` | create/update a secret (body = plaintext) |
 | `DELETE` | `/_/admin/secrets/:name[?namespace=]` | delete (409 if still referenced) |
-| `GET`    | `/_/admin/registry`                   | full registry |
-| `PUT`    | `/_/admin/registry`                   | replace whole registry (GET, merge locally, PUT back) |
-| `PATCH`  | `/_/admin/registry/:id`               | upsert one item (preferred for adding a single integration) |
-| `DELETE` | `/_/admin/registry/:id`               | delete one item |
+| `GET`    | `/_/admin/registry`                   | full registry (what the proxy serves) |
+| `GET`    | `/_/admin/registry/snapshot`          | compiled-snapshot download: `{ snapshot: { at, apex, count }, items }` — save straight to `src/generated/registry.json` in the deploy copy, then redeploy (emits the live KV draft, even in snapshot mode) |
+| `PUT`    | `/_/admin/registry`                   | replace whole registry (GET, merge locally, PUT back; snapshot mode → 202 + `redeployRequired`) |
+| `PATCH`  | `/_/admin/registry/:id`               | upsert one item (preferred for adding a single integration; snapshot mode → 202 + `redeployRequired`) |
+| `DELETE` | `/_/admin/registry/:id`               | delete one item (snapshot mode → 202 + `redeployRequired`) |
 | `POST`   | `/_/keys` (unauth'd)                  | mint an API key (body `secret` = `HODOR_JWT_SECRET`; names unique among live keys, dup → 409) |
 | `DELETE` | `/_/admin/keys/:jti`                  | revoke a minted key (denylist) |
 | `GET`    | `/_/admin/keys/revoked`               | list revoked key jtis |
@@ -456,7 +459,7 @@ sent as `X-Authorization: Bearer <jwt>`. Deployed base:
 | `GET`    | `/_/admin/catalog[?q=]`               | search the built-in catalog (live GitHub) |
 | `GET`    | `/_/admin/catalog/:id`                | fetch one catalog integration shape |
 | `GET`    | `/_/admin/health`                     | readiness (KV + encryption key probe) |
-| `GET`    | `/_/admin/info`                       | summary (item count, namespaces) |
+| `GET`    | `/_/admin/info`                       | summary: `registry.mode` (`snapshot`/`kv`), snapshot stamp, draft-vs-deployed drift (`added`/`removed`/`changed`), `itemCount` (deployed count), namespaces |
 
 Interactive docs: `/_/admin/docs` (Scalar) · OpenAPI: `/_/admin/openapi.json`.
 
@@ -469,6 +472,40 @@ serves the main/apex host only — check `HODOR_APP_URL`'s host. Subdomains are 
 forwarders: every path (including `/_/...`) goes through the proxy to the registry target.
 Any valid token (`proxy:call` or `admin`) may read `/_/reflection`, and a token
 restricted by `integrations` only sees its permitted services.
+
+## Compiled registry
+
+Steady state is read-heavy, so deployed workers compile the registry into the
+bundle: the proxy hot path serves it from memory with **zero KV reads**.
+Registry items are safe to bundle — they hold JEXL *references*
+(`secret('NAME')`, `variable('NAME')`) plus non-secret `identifiers`, never
+credential values.
+
+- `src/generated/registry.json` (`{ snapshot: { at, apex, count }, items }`)
+  is baked into the bundle. The committed placeholder
+  (`{ "snapshot": null, "items": {} }`) means live-KV mode: reads fall
+  through to `HODOR_KV`, admin writes take effect immediately. Local dev and
+  tests run this way.
+- Real snapshots live **only inside deploy copies** (never commit one — the
+  registry holds your integration topology). One curl, run from the copy:
+
+  ```bash
+  curl -s https://<apex>/_/admin/registry/snapshot \
+    -H "X-Authorization: Bearer $HAT" > src/generated/registry.json
+  npx wrangler deploy
+  ```
+
+  The endpoint emits the live KV draft (the source of truth), even in snapshot
+  mode — so it never exports a stale deploy back onto itself.
+- Registry edits in snapshot mode: admin writes always go to KV and return
+  **202 + `redeployRequired`** — the proxy keeps serving the compiled bundle
+  until you re-pull the snapshot and redeploy.
+- `GET /_/admin/info` reports `registry.mode` (`snapshot`/`kv`), the snapshot
+  stamp, and draft-vs-deployed drift (`added`/`removed`/`changed`) with an
+  `inSync` flag; `itemCount` stays the deployed count.
+- KV still holds revocations (`revoked:<jti>`), the mint ledger (`key:*`),
+  and the registry draft (`r:*` + `meta:registry`) — but the per-request
+  registry read is gone.
 
 ## Troubleshooting (paid for in dogfooding)
 
