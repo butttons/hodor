@@ -32,9 +32,15 @@ Sync command (from repo root):
 rsync -a --delete \
   --exclude node_modules --exclude .turbo --exclude .wrangler --exclude dist \
   --exclude package.json --exclude wrangler.jsonc \
+  --exclude src/generated/registry.json \
   --exclude .env --exclude .dev.vars --exclude '*.log' \
   apps/proxy-worker/ ../my-proxy/
 ```
+
+The compiled registry snapshot (`src/generated/registry.json`) is per-deploy:
+real snapshots live only inside the copies (pulled from
+`GET /_/admin/registry/snapshot`, one curl), so the sync never clobbers them.
+The committed placeholder (`{ "snapshot": null }`) means live-KV mode.
 
 Then `cd ../my-proxy && npx wrangler deploy`.
 
