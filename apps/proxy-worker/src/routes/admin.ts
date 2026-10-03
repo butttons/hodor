@@ -143,9 +143,32 @@ export const adminApp = createRouter()
     const items = await registry.getAll();
     return ctx.json(items);
   })
+  // Compiled-snapshot download: returns `{ snapshot: { at, apex, count },
+  // items }` shaped exactly like `src/generated/registry.json`, so the
+  // caller saves one curl straight into the deploy copy and redeploys — no
+  // build tooling on the user side. Emits the live KV draft (the source of
+  // truth a snapshot must capture), not the currently-deployed bundle.
+  .get("/registry/snapshot", async (ctx) => {
+    const { registry } = await getDeps(ctx);
+    const items = await registry.getDraft();
+    const ids = Object.keys(items).sort();
+    const sorted = Object.fromEntries(ids.map((id) => [id, items[id]]));
+    const apex = ctx.env.HODOR_APP_URL
+      ? new URL(ctx.env.HODOR_APP_URL).origin
+      : new URL(ctx.req.url).origin;
+    return ctx.json({
+      snapshot: { at: new Date().toISOString(), apex, count: ids.length },
+      items: sorted,
+    });
+  })
   .put("/registry", zValidator("json", registryReplaceInput, validationHook), async (ctx) => {
     const { registry } = await getDeps(ctx);
     await registry.putAll(ctx.req.valid("json"));
+    // In compiled mode the proxy serves the snapshot: the KV write is a
+    // draft until the next snapshot + redeploy.
+    if (registry.isCompiled) {
+      return ctx.json({ replaced: true, redeployRequired: true, mode: "snapshot" as const }, 202);
+    }
     return ctx.body(null, 204);
   })
   .patch(
@@ -156,12 +179,22 @@ export const adminApp = createRouter()
       const { registry } = await getDeps(ctx);
       const { id } = ctx.req.valid("param");
       const item = await registry.putItem({ id, item: ctx.req.valid("json") });
+      // In compiled mode the proxy serves the snapshot: the KV write is a
+      // draft until the next snapshot + redeploy.
+      if (registry.isCompiled) {
+        return ctx.json({ ...item, redeployRequired: true, mode: "snapshot" as const }, 202);
+      }
       return ctx.json(item);
     },
   )
   .delete("/registry/:id", zValidator("param", registryIdParam, validationHook), async (ctx) => {
     const { registry } = await getDeps(ctx);
     await registry.deleteItem(ctx.req.valid("param").id);
+    // In compiled mode the proxy serves the snapshot: the KV delete is a
+    // draft until the next snapshot + redeploy.
+    if (registry.isCompiled) {
+      return ctx.json({ deleted: true, redeployRequired: true, mode: "snapshot" as const }, 202);
+    }
     return ctx.body(null, 204);
   })
   .get("/catalog/summary", async (ctx) => {
@@ -263,13 +296,50 @@ export const adminApp = createRouter()
   })
   .get("/info", async (ctx) => {
     const { registry, secrets } = await getDeps(ctx);
-    const items = await registry.getAll();
     const secretList = await secrets.list();
     const namespaces = [...new Set(secretList.map((secret) => secret.namespace))];
-    return ctx.json({
+    const base = {
       version: APP_VERSION, // single source: root package.json (scripts/sync-version.mjs)
-      itemCount: Object.keys(items).length,
       namespaces,
+    };
+    // Live-KV mode: what the proxy serves IS the KV draft — no drift possible.
+    if (!registry.isCompiled) {
+      const items = await registry.getAll();
+      return ctx.json({
+        ...base,
+        registry: {
+          mode: "kv" as const,
+          itemCount: Object.keys(items).length,
+        },
+        itemCount: Object.keys(items).length,
+      });
+    }
+    // Snapshot mode: the proxy serves the compiled bundle; KV holds the
+    // draft. Diff the ids so a stale deploy is visible without another call.
+    const deployedIds = Object.keys(registry.compiled).sort();
+    const draft = await registry.getDraft();
+    const draftIds = Object.keys(draft).sort();
+    const deployed = new Set(deployedIds);
+    const draftSet = new Set(draftIds);
+    const drift = {
+      added: draftIds.filter((id) => !deployed.has(id)),
+      removed: deployedIds.filter((id) => !draftSet.has(id)),
+      changed: deployedIds.filter(
+        (id) =>
+          draftSet.has(id) && JSON.stringify(draft[id]) !== JSON.stringify(registry.compiled[id]),
+      ),
+    };
+    return ctx.json({
+      ...base,
+      registry: {
+        mode: "snapshot" as const,
+        snapshot: registry.snapshotMeta,
+        deployedCount: deployedIds.length,
+        draftCount: draftIds.length,
+        inSync: drift.added.length + drift.removed.length + drift.changed.length === 0,
+        drift,
+      },
+      itemCount: deployedIds.length,
     });
   })
   .get("/openapi.json", (ctx) => ctx.json(assembleOpenApiDocument(ctx.env.HODOR_APP_URL)))

@@ -92,6 +92,21 @@ describe("control surface lives under /_ and is main-host only", () => {
     );
     expect(mint.status).toBe(201);
 
+    const snapshot = await app.request(
+      "https://example.com/_/admin/registry/snapshot",
+      { headers: { host: "example.com", "X-Authorization": `Bearer ${admin}` } },
+      env,
+      execCtx,
+    );
+    expect(snapshot.status).toBe(200);
+    const snap = (await snapshot.json()) as {
+      snapshot: { apex: string; count: number };
+      items: Record<string, { id: string }>;
+    };
+    expect(snap.snapshot.count).toBe(1);
+    expect(Object.keys(snap.items)).toEqual(["test"]);
+    expect(snap.items.test.id).toBe("test");
+
     const ledger = await app.request(
       "https://example.com/_/admin/keys",
       { headers: { host: "example.com", "X-Authorization": `Bearer ${admin}` } },

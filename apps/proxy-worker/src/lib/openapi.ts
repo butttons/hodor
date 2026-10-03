@@ -141,10 +141,43 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
           },
         },
       },
+      "/_/admin/registry/snapshot": {
+        get: {
+          security: bearerSecurity,
+          summary: "Compiled-snapshot download",
+          description:
+            "Returns `{ snapshot: { at, apex, count }, items }` shaped exactly like `src/generated/registry.json`. Save one curl straight to that path in the deploy copy and redeploy — the proxy then serves the registry from memory with zero KV reads. Emits the live KV draft (the source of truth), even in snapshot mode.",
+          responses: {
+            200: jsonOk(
+              {
+                type: "object",
+                properties: {
+                  snapshot: {
+                    type: "object",
+                    properties: {
+                      at: { type: "string" },
+                      apex: { type: "string" },
+                      count: { type: "number" },
+                    },
+                  },
+                  items: {
+                    type: "object",
+                    additionalProperties: { $ref: "#/components/schemas/ProxyItem" },
+                  },
+                },
+              },
+              "The compiled snapshot file content.",
+            ),
+            401: errorResponse(401),
+          },
+        },
+      },
       "/_/admin/registry": {
         get: {
           security: bearerSecurity,
           summary: "Get the full registry",
+          description:
+            "In snapshot mode (compiled registry in the bundle) this returns the deployed snapshot; admin writes go to the KV draft and need a re-pull of `GET /_/admin/registry/snapshot` + redeploy.",
           responses: {
             200: jsonOk(
               { type: "object", additionalProperties: { $ref: "#/components/schemas/ProxyItem" } },
@@ -156,6 +189,8 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
         put: {
           security: bearerSecurity,
           summary: "Replace the entire registry",
+          description:
+            "Writes always go to KV. In snapshot mode the proxy keeps serving the compiled bundle: the response is 202 with `redeployRequired: true` — re-pull `GET /_/admin/registry/snapshot` + redeploy to take effect.",
           requestBody: {
             required: true,
             content: {
@@ -168,7 +203,18 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
             },
           },
           responses: {
-            204: { description: "Registry replaced." },
+            204: { description: "Registry replaced (live-KV mode)." },
+            202: jsonOk(
+              {
+                type: "object",
+                properties: {
+                  replaced: { type: "boolean" },
+                  redeployRequired: { type: "boolean" },
+                  mode: { type: "string" },
+                },
+              },
+              "Draft written (snapshot mode) — snapshot + redeploy to take effect.",
+            ),
             400: errorResponse(400),
             401: errorResponse(401),
           },
@@ -187,6 +233,8 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
         patch: {
           security: bearerSecurity,
           summary: "Create or update one registry item",
+          description:
+            "Writes always go to KV. In snapshot mode the proxy keeps serving the compiled bundle: the response is 202 with `redeployRequired: true` — re-pull `GET /_/admin/registry/snapshot` + redeploy to take effect.",
           requestBody: {
             required: true,
             content: {
@@ -194,7 +242,17 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
             },
           },
           responses: {
-            200: jsonOk({ $ref: "#/components/schemas/ProxyItem" }, "The saved item."),
+            200: jsonOk(
+              { $ref: "#/components/schemas/ProxyItem" },
+              "The saved item (live-KV mode).",
+            ),
+            202: jsonOk(
+              {
+                type: "object",
+                description: 'The saved item plus `redeployRequired: true` and `mode: "snapshot"`.',
+              },
+              "Draft written (snapshot mode) — snapshot + redeploy to take effect.",
+            ),
             400: errorResponse(400),
             401: errorResponse(401),
           },
@@ -202,8 +260,21 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
         delete: {
           security: bearerSecurity,
           summary: "Delete one registry item",
+          description:
+            "Deletes always go to KV. In snapshot mode the proxy keeps serving the compiled bundle: the response is 202 with `redeployRequired: true` — re-pull `GET /_/admin/registry/snapshot` + redeploy to take effect.",
           responses: {
-            204: { description: "Deleted." },
+            204: { description: "Deleted (live-KV mode)." },
+            202: jsonOk(
+              {
+                type: "object",
+                properties: {
+                  deleted: { type: "boolean" },
+                  redeployRequired: { type: "boolean" },
+                  mode: { type: "string" },
+                },
+              },
+              "Draft deleted (snapshot mode) — snapshot + redeploy to take effect.",
+            ),
             401: errorResponse(401),
           },
         },
@@ -413,13 +484,40 @@ export function assembleOpenApiDocument(appUrl?: string): Record<string, unknown
         get: {
           security: bearerSecurity,
           summary: "Non-sensitive runtime summary",
+          description:
+            "`registry.mode` is `snapshot` when the bundle carries a compiled registry (proxy serves it from memory; KV holds the draft — see `drift`) or `kv` when reads are live from KV. `itemCount` is the deployed count (kept for compatibility).",
           responses: {
             200: jsonOk(
               {
                 type: "object",
                 properties: {
-                  itemCount: { type: "number" },
+                  itemCount: { type: "number", description: "Deployed item count." },
                   namespaces: { type: "array", items: { type: "string" } },
+                  registry: {
+                    type: "object",
+                    properties: {
+                      mode: { type: "string", enum: ["snapshot", "kv"] },
+                      snapshot: {
+                        type: ["object", "null"],
+                        properties: {
+                          at: { type: "string" },
+                          apex: { type: "string" },
+                          count: { type: "number" },
+                        },
+                      },
+                      deployedCount: { type: "number" },
+                      draftCount: { type: "number" },
+                      inSync: { type: "boolean" },
+                      drift: {
+                        type: "object",
+                        properties: {
+                          added: { type: "array", items: { type: "string" } },
+                          removed: { type: "array", items: { type: "string" } },
+                          changed: { type: "array", items: { type: "string" } },
+                        },
+                      },
+                    },
+                  },
                 },
               },
               "Summary.",
