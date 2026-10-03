@@ -30,6 +30,8 @@ function mockKV(): KVNamespace {
 async function makeEnv() {
   const kv = mockKV();
   const storage = await kvStore({ binding: kv });
+  // Tests run against the committed placeholder snapshot (empty), so the
+  // registry store stays in live-KV mode and seeded `r:*` keys are served.
   await storage.setItem("r:test", {
     id: "test",
     url: { host: "httpbin.org" },

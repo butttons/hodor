@@ -1,9 +1,13 @@
 /**
- * Registry store on the key-value store — one key per item (`r:<id>` →
- * proxyItem) plus a single **manifest** in its own namespace
- * (`meta:registry` → list of ids) so full reads are manifest-driven with no
- * key listing on the hot path. A list is used only as a one-time bootstrap
- * when no manifest exists yet.
+ * Registry store — two sources, one read interface.
+ *
+ * Compiled mode (deployed workers): items are baked into the bundle by
+ * `scripts/snapshot-registry.mjs` (`src/generated/registry.json`, per deploy
+ * copy). Reads are pure memory lookups — zero KV on the proxy hot path.
+ * Live mode (local dev, tests, placeholder snapshot): reads fall through to
+ * `HODOR_KV` (`r:<id>` items + the `meta:registry` manifest). Admin writes
+ * always go to KV; in compiled mode they are a draft until the next snapshot
+ * + redeploy (the admin surface reports `redeployRequired` + drift).
  *
  * Keyspaces (namespaced, no collisions):
  *   `r:<id>`        — registry items (id regex forbids colon, so never clash)
@@ -12,24 +16,77 @@
  *
  * Values are stored/read as native JSON through the unstorage layer (it
  * serializes for the Cloudflare KV driver and deserializes on read).
+ * Safe to compile: items hold JEXL *references* (`secret('NAME')`,
+ * `variable('NAME')`) plus non-secret `identifiers`, never credential values.
  * @module
  */
 import { AppHTTPException, ErrorCodes } from "./errors";
 import type { KeyValueStore } from "./runtime";
 import { proxyItem as proxyItemSchema, type ProxyItem } from "./schema";
+import { REGISTRY_SNAPSHOT } from "./snapshot";
 
 const KEY_PREFIX = "r:";
 const MANIFEST_KEY = "meta:registry";
 
-export class RegistryStore {
-  constructor(private readonly store: KeyValueStore) {}
+/** Snapshot mode: which backing store serves registry reads. */
+export type RegistryMode = "snapshot" | "kv";
 
-  key(id: string): string {
-    return `${KEY_PREFIX}${id}`;
+export interface RegistryStoreInput {
+  storage: KeyValueStore;
+  /** Compiled items for this bundle; defaults to the bundled snapshot. */
+  snapshotItems?: Record<string, ProxyItem>;
+  /** Snapshot stamp for `/_/admin/info`; defaults to the bundled stamp. */
+  snapshotMeta?: { at: string; apex: string; count: number } | null;
+}
+
+function isStore(input: KeyValueStore | RegistryStoreInput): input is KeyValueStore {
+  return typeof (input as KeyValueStore).getItem === "function";
+}
+
+export class RegistryStore {
+  /** Compiled items baked into the bundle (empty object = live-KV mode). */
+  readonly compiled: Record<string, ProxyItem>;
+  /** Snapshot stamp for `/_/admin/info` (null = no snapshot compiled). */
+  readonly snapshotMeta: { at: string; apex: string; count: number } | null;
+
+  constructor(input: KeyValueStore | RegistryStoreInput) {
+    if (isStore(input)) {
+      this.store = input;
+      this.compiled = REGISTRY_SNAPSHOT.items;
+      this.snapshotMeta = REGISTRY_SNAPSHOT.meta;
+    } else {
+      this.store = input.storage;
+      this.compiled = input.snapshotItems ?? REGISTRY_SNAPSHOT.items;
+      this.snapshotMeta =
+        input.snapshotMeta === undefined ? REGISTRY_SNAPSHOT.meta : input.snapshotMeta;
+    }
+  }
+
+  private readonly store: KeyValueStore;
+
+  /** True when this bundle carries a compiled snapshot (proxy serves memory). */
+  get isCompiled(): boolean {
+    return Object.keys(this.compiled).length > 0;
+  }
+
+  /** Which backing store serves this read (`"snapshot"` or `"kv"`). */
+  get mode(): RegistryMode {
+    return this.isCompiled ? "snapshot" : "kv";
   }
 
   /** Load a single item; throws 404 if absent or corrupt. */
   async getOne(id: string): Promise<ProxyItem> {
+    if (this.isCompiled) {
+      const item = this.compiled[id];
+      if (!item) {
+        throw new AppHTTPException({
+          message: `Registry item "${id}" not found`,
+          code: ErrorCodes.NOT_FOUND,
+          status: 404,
+        });
+      }
+      return item;
+    }
     const parsed = await this.readValid(id);
     if (!parsed) {
       throw new AppHTTPException({
@@ -42,11 +99,12 @@ export class RegistryStore {
   }
 
   /**
-   * Load every item into a keyed registry via the manifest (one read + N
-   * reads, no listing). Falls back to a one-time key listing when no
-   * manifest exists.
+   * Load every item. Compiled mode returns the snapshot from memory (zero
+   * KV reads); live mode reads via the manifest (one read + N reads, no
+   * listing) with a one-time key-listing bootstrap when no manifest exists.
    */
   async getAll(): Promise<Record<string, ProxyItem>> {
+    if (this.isCompiled) return { ...this.compiled };
     const ids = (await this.store.getItem<string[]>(MANIFEST_KEY)) ?? null;
 
     if (!ids) {
@@ -83,6 +141,34 @@ export class RegistryStore {
       console.error(`Registry item "${id}" unreadable; skipped`);
     }
     return null;
+  }
+
+  key(id: string): string {
+    return `${KEY_PREFIX}${id}`;
+  }
+
+  /**
+   * The live KV draft — reads that bypass the snapshot. The admin surface
+   * uses this for drift detection (`/_/admin/info`) and the post-write
+   * response (`redeployRequired` until the next snapshot + redeploy).
+   */
+  async getDraft(): Promise<Record<string, ProxyItem>> {
+    const ids = (await this.store.getItem<string[]>(MANIFEST_KEY)) ?? null;
+    if (!ids) {
+      const keys = await this.store.getKeys(KEY_PREFIX);
+      const items: Record<string, ProxyItem> = {};
+      for (const name of keys) {
+        const value = await this.readValid(name.slice(KEY_PREFIX.length));
+        if (value) items[value.id] = value;
+      }
+      return items;
+    }
+    const items: Record<string, ProxyItem> = {};
+    for (const id of ids) {
+      const value = await this.readValid(id);
+      if (value) items[id] = value;
+    }
+    return items;
   }
 
   /** Validate + write one item and register it in the manifest. */
