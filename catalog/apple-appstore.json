@@ -1,0 +1,20 @@
+{
+  "id": "apple-appstore",
+  "url": {
+    "host": "api.storekit.itunes.apple.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + jwt({alg: 'ES256', key: kv('APPLE_PRIVATE_KEY'), kid: kv('APPLE_KEY_ID'), ttl: 3600, claims: {iss: kv('APPLE_ISSUER_ID'), aud: 'appstoreconnect-v1', bid: kv('APPLE_BUNDLE_ID')}})"
+  },
+  "meta": {
+    "label": "Apple App Store Server API",
+    "description": "Verify iOS transactions, look up subscriptions, and extend renewals for App Store purchases",
+    "docs": "https://developer.apple.com/documentation/appstoreserverapi",
+    "icon": "https://www.google.com/s2/favicons?domain=apple.com&sz=128",
+    "note": "Token is minted at request time from your App Store Connect key material in KV (EC P-256 private key + key ID + issuer ID + bundle ID) — no refresher cron needed. Sandbox host: api.storekit-sandbox.itunes.apple.com. No token-only endpoint exists, so the probe needs a real transaction ID (404 with valid auth = working)."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/inApps/v1/transactions/test"
+  }
+}

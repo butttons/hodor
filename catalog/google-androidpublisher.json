@@ -1,0 +1,20 @@
+{
+  "id": "google-androidpublisher",
+  "url": {
+    "host": "androidpublisher.googleapis.com"
+  },
+  "headers": {
+    "Authorization": "'Bearer ' + google_oauth({account: kv('ANDROID_SERVICE_ACCOUNT'), scope: 'https://www.googleapis.com/auth/androidpublisher'})"
+  },
+  "meta": {
+    "label": "Google Play Developer API",
+    "description": "Verify Android subscriptions and orders for Play Billing (subscriptionsv2, orders, acknowledge)",
+    "docs": "https://developers.google.com/android-publisher",
+    "icon": "https://www.google.com/s2/favicons?domain=google.com&sz=128",
+    "note": "Access token is minted at request time via service-account JWT-bearer exchange (account = service-account JSON with client_email + private_key, cached in-isolate until expiry) — no refresher cron needed. Key paths: GET /androidpublisher/v3/applications/{package}/purchases/subscriptionsv2/tokens/{token} and GET .../applications/{package}/orders/{orderId}. Probe needs a real package name (404 with valid auth = working)."
+  },
+  "probe": {
+    "method": "GET",
+    "path": "/androidpublisher/v3/applications/test"
+  }
+}

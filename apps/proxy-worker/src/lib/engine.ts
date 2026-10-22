@@ -16,6 +16,18 @@
  *   - `secret_store('NAME')` — a Cloudflare Secrets Store binding via `env.[name].get()`
  *   - `variable('NAME')`    — a plain-text env value via `env.[name]` (non-secret config)
  *
+ * Two signing helpers cover JWT-based upstreams (Apple, Google) without any
+ * external refresher — tokens are minted at request time from keys in the
+ * secret stores above:
+ *   - `jwt({alg, key, claims[, kid, typ, ttl]})` — compact JWS via WebCrypto.
+ *     alg is 'ES256' or 'RS256', key a PKCS8 PEM string, claims an object;
+ *     iat/exp default to now/now+ttl (ttl seconds, default 3600) unless the
+ *     caller sets them. kid lands in the protected header.
+ *   - `google_oauth({account, scope[, ttl]})` — service-account JWT-bearer
+ *     exchange at oauth2.googleapis.com/token, returning an access token.
+ *     account is the service-account JSON (client_email + private_key);
+ *     tokens are cached in-isolate until expiry minus skew.
+ *
  * A hardened runtime exposes a small helper library (base64, json, ...) for
  * building auth headers. Anything that isn't a valid expression throws, so a
  * malformed config fails loudly rather than proxying a broken header.
@@ -27,6 +39,10 @@
  *     "Authorization": "'Bearer ' + kv('OPENAI_API_KEY')"
  * - Build Basic auth with base64:
  *     "X-Auth": "'Basic ' + base64(kv('ID') + ':' + kv('SECRET'))"
+ * - Mint an Apple App Store Server API token at request time:
+ *     "Authorization": "'Bearer ' + jwt({alg: 'ES256', key: kv('APPLE_PRIVATE_KEY'), kid: kv('APPLE_KEY_ID'), ttl: 3600, claims: {iss: kv('APPLE_ISSUER_ID'), aud: 'appstoreconnect-v1', bid: kv('APPLE_BUNDLE_ID')}})"
+ * - Mint a Google access token via service-account exchange:
+ *     "Authorization": "'Bearer ' + google_oauth({account: kv('ANDROID_SERVICE_ACCOUNT'), scope: 'https://www.googleapis.com/auth/androidpublisher'})"
  * - Bare unquoted text (e.g. `application/json`) is invalid and will throw —
  *   when in doubt, wrap a literal in quotes.
  *
@@ -62,6 +78,8 @@ const RESERVED = new Set([
   "lower",
   "trim",
   "urlencode",
+  "jwt",
+  "google_oauth",
 ]);
 
 /** Base64-encode a UTF-8 string (safe for non-ASCII input). */
@@ -75,6 +93,152 @@ function toBase64(input: string): string {
 /** Base64url-encode a UTF-8 string (URL-safe, no padding). */
 function toBase64Url(input: string): string {
   return toBase64(input).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Decode a PKCS8 PEM block to raw DER bytes. */
+function pemToDer(pem: string): Uint8Array {
+  const normalized = pem.replace(/\\n/g, "\n").replace(/\r/g, "");
+  const base64 = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith("-----"))
+    .join("");
+  if (base64.length === 0 || !/^[A-Za-z0-9+/=]+$/.test(base64)) {
+    throw new HeaderExpressionError("jwt() — key is not a valid PEM block");
+  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index++) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+/** base64url-encode raw bytes (URL-safe, no padding). */
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/** Options for {@link signJwt}. */
+export interface JwtOptions {
+  alg: string;
+  key: string;
+  claims?: Record<string, unknown>;
+  kid?: string;
+  typ?: string;
+  ttl?: number;
+}
+
+/**
+ * Sign a compact JWS with a PKCS8 PEM private key via WebCrypto.
+ * `iat`/`exp` default to now/now+ttl unless the caller sets them in claims.
+ */
+export async function signJwt(input: JwtOptions): Promise<string> {
+  const { alg, key, claims = {}, kid, typ = "JWT", ttl = 3600 } = input;
+  if (alg !== "ES256" && alg !== "RS256") {
+    throw new HeaderExpressionError(
+      `jwt() — unsupported alg ${JSON.stringify(alg)} (want 'ES256' or 'RS256')`,
+    );
+  }
+  if (typeof key !== "string" || !key.includes("PRIVATE KEY")) {
+    throw new HeaderExpressionError("jwt() — key must be a PKCS8 PEM private key string");
+  }
+  if (typeof claims !== "object" || claims === null || Array.isArray(claims)) {
+    throw new HeaderExpressionError("jwt() — claims must be an object");
+  }
+  if (!Number.isInteger(ttl) || ttl <= 0) {
+    throw new HeaderExpressionError("jwt() — ttl must be a positive integer (seconds)");
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const payload = { iat: now, exp: now + ttl, ...claims };
+  const importAlgo =
+    alg === "ES256"
+      ? { name: "ECDSA", namedCurve: "P-256" }
+      : { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" };
+  let cryptoKey: CryptoKey;
+  try {
+    cryptoKey = await crypto.subtle.importKey("pkcs8", pemToDer(key), importAlgo, false, [
+      "sign",
+    ]);
+  } catch {
+    throw new HeaderExpressionError(`jwt() — key import failed (wrong key for ${alg}?)`);
+  }
+  const header = { alg, typ, ...(typeof kid === "string" && kid ? { kid } : {}) };
+  const signingInput = `${toBase64Url(JSON.stringify(header))}.${toBase64Url(JSON.stringify(payload))}`;
+  const signature = await crypto.subtle.sign(
+    alg === "ES256" ? { name: "ECDSA", hash: "SHA-256" } : { name: "RSASSA-PKCS1-v1_5" },
+    cryptoKey,
+    new TextEncoder().encode(signingInput),
+  );
+  return `${signingInput}.${bytesToBase64Url(new Uint8Array(signature))}`;
+}
+
+/** Options for {@link googleOAuth}. */
+export interface GoogleOAuthOptions {
+  account: string;
+  scope: string;
+  ttl?: number;
+}
+
+/** In-isolate cache of Google access tokens, keyed by service account + scope. */
+const googleTokenCache = new Map<string, { token: string; exp: number }>();
+
+/**
+ * Service-account JWT-bearer exchange at oauth2.googleapis.com/token.
+ * `account` is the service-account JSON (client_email + private_key).
+ * Returns a cached access token when one is still valid (60s skew).
+ */
+export async function googleOAuth(input: GoogleOAuthOptions): Promise<string> {
+  const { account, scope, ttl = 3600 } = input;
+  if (typeof account !== "string" || account.length === 0 || typeof scope !== "string" || scope.length === 0) {
+    throw new HeaderExpressionError(
+      "google_oauth() — need {account: <service-account JSON>, scope: <oauth scope>}",
+    );
+  }
+  let service: { client_email?: unknown; private_key?: unknown };
+  try {
+    service = JSON.parse(account);
+  } catch {
+    throw new HeaderExpressionError("google_oauth() — account is not valid JSON");
+  }
+  if (typeof service.client_email !== "string" || typeof service.private_key !== "string") {
+    throw new HeaderExpressionError(
+      "google_oauth() — account JSON needs client_email + private_key",
+    );
+  }
+  const cacheKey = `${service.client_email}\n${scope}`;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const cached = googleTokenCache.get(cacheKey);
+  if (cached && cached.exp > nowSec + 60) return cached.token;
+  const assertion = await signJwt({
+    alg: "RS256",
+    key: service.private_key,
+    ttl: Math.min(ttl, 3600),
+    claims: { iss: service.client_email, scope, aud: "https://oauth2.googleapis.com/token" },
+  });
+  let response: Response;
+  try {
+    response = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
+    });
+  } catch (cause) {
+    throw new HeaderExpressionError(`google_oauth() — token exchange unreachable: ${(cause as Error).message}`);
+  }
+  if (!response.ok) {
+    throw new HeaderExpressionError(`google_oauth() — token exchange failed (HTTP ${response.status})`);
+  }
+  const data = (await response.json()) as { access_token?: unknown; expires_in?: unknown };
+  if (typeof data.access_token !== "string" || data.access_token.length === 0) {
+    throw new HeaderExpressionError("google_oauth() — exchange returned no access_token");
+  }
+  const lifetime = typeof data.expires_in === "number" && data.expires_in > 0 ? data.expires_in : 3600;
+  googleTokenCache.set(cacheKey, { token: data.access_token, exp: nowSec + lifetime });
+  return data.access_token;
 }
 
 /** Built-in helpers registered on every runtime. */
@@ -170,6 +334,59 @@ export class HeaderExpressionEngine {
         );
       }
       return String(value);
+    });
+    // Request-time JWS signing for JWT-based upstreams (Apple, Google).
+    // Single-object form — JEXL object literals may nest kv()/secret() calls:
+    //   jwt({alg: 'ES256', key: kv('APPLE_PRIVATE_KEY'), kid: kv('APPLE_KEY_ID'),
+    //        ttl: 3600, claims: {iss: kv('APPLE_ISSUER_ID'), aud: 'appstoreconnect-v1'}})
+    this.runtime.addFunction("jwt", (opts: unknown) => {
+      if (typeof opts !== "object" || opts === null || Array.isArray(opts)) {
+        throw new HeaderExpressionError(
+          "jwt() — pass one object: jwt({alg, key, claims[, kid, typ, ttl]})",
+        );
+      }
+      const { alg, key, claims, kid, typ, ttl } = opts as Record<string, unknown>;
+      if (typeof alg !== "string" || typeof key !== "string") {
+        throw new HeaderExpressionError("jwt() — alg and key must be strings");
+      }
+      if (claims !== undefined && (typeof claims !== "object" || claims === null)) {
+        throw new HeaderExpressionError("jwt() — claims must be an object");
+      }
+      if (kid !== undefined && typeof kid !== "string") {
+        throw new HeaderExpressionError("jwt() — kid must be a string");
+      }
+      if (typ !== undefined && typeof typ !== "string") {
+        throw new HeaderExpressionError("jwt() — typ must be a string");
+      }
+      if (ttl !== undefined && (typeof ttl !== "number" || !Number.isInteger(ttl))) {
+        throw new HeaderExpressionError("jwt() — ttl must be an integer (seconds)");
+      }
+      return signJwt({
+        alg,
+        key,
+        claims: (claims ?? {}) as Record<string, unknown>,
+        kid,
+        typ,
+        ttl,
+      });
+    });
+    // Google service-account exchange (assertion signing + token fetch + cache):
+    //   google_oauth({account: kv('ANDROID_SERVICE_ACCOUNT'),
+    //                 scope: 'https://www.googleapis.com/auth/androidpublisher'})
+    this.runtime.addFunction("google_oauth", (opts: unknown) => {
+      if (typeof opts !== "object" || opts === null || Array.isArray(opts)) {
+        throw new HeaderExpressionError(
+          "google_oauth() — pass one object: google_oauth({account, scope[, ttl]})",
+        );
+      }
+      const { account, scope, ttl } = opts as Record<string, unknown>;
+      if (typeof account !== "string" || typeof scope !== "string") {
+        throw new HeaderExpressionError("google_oauth() — account and scope must be strings");
+      }
+      if (ttl !== undefined && (typeof ttl !== "number" || !Number.isInteger(ttl))) {
+        throw new HeaderExpressionError("google_oauth() — ttl must be an integer (seconds)");
+      }
+      return googleOAuth({ account, scope, ttl });
     });
     // Host process env, for standalone Node/Bun servers: `process.env[NAME]`.
     // Empty on Workers (no process env to read) — that's the point. Unlike
