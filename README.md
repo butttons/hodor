@@ -28,11 +28,11 @@ npx wrangler deploy --secrets-file .dev.vars   # first deploy: uploads the two r
 # npx wrangler deploy                          # later deploys are plain
 ```
 
-Then **add one proxied DNS record** — `A  *.hodor.ing → 192.0.2.0`,
+Then **add one proxied DNS record** — `A  *.example.com → 192.0.2.0`,
 orange-clouded. `192.0.2.0` is a dummy RFC-5737 address; the worker route
 does the real routing, and worker routes don't create DNS records. First-level
 wildcards are covered by Universal SSL — no custom cert. (Custom domains only
-support single hosts, fine for the `hodor.ing` apex.)
+support single hosts, fine for the `example.com` apex.)
 
 One worker does all the work; a second worker just hosts the docs site.
 

@@ -94,7 +94,7 @@ npx wrangler deploy
 pnpm dev             # wrangler dev, KV persists to ../../data
 pnpm type-check
 pnpm test            # vitest (plain node env)
-pnpm deploy          # requires: KV namespace id + hodor.ing zone in CF account
+pnpm deploy          # requires: KV namespace id + your own zone in CF account
 ```
 
 ## Self-host on Node or Bun (no Cloudflare)
