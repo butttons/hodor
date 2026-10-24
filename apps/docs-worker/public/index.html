@@ -788,7 +788,7 @@ JSON</code></pre>
       <section id="secrets">
         <div class="sec-head">Injecting secrets</div>
         <p class="muted">
-          Header values are JEXL expressions. Four helpers, picked per deployment:
+          Header values are JEXL expressions. Seven helpers, picked per deployment:
         </p>
         <ul class="tight">
           <li>
@@ -808,6 +808,17 @@ JSON</code></pre>
           <li>
             <code>process_env('NAME')</code> — host <code>process.env</code>. Standalone Node/Bun
             only.
+          </li>
+          <li>
+            <code>jwt({alg, key, claims[, kid, typ, ttl]})</code> — sign a compact JWS at request
+            time via WebCrypto (<code>'ES256'</code>/<code>'RS256'</code>, PKCS8 PEM key,
+            <code>iat</code>/<code>exp</code> injected). Apple App Store Server API with zero
+            refresher infra.
+          </li>
+          <li>
+            <code>google_oauth({account, scope[, ttl]})</code> — service-account JWT-bearer
+            exchange at <code>oauth2.googleapis.com/token</code>, token cached in-isolate. Google
+            Play Developer API with zero refresher infra.
           </li>
         </ul>
         <p class="muted">

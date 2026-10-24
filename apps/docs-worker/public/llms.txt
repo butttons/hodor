@@ -17,8 +17,10 @@ and hodor injects your `Authorization` (or any header) automatically upstream.
   header/query templates written in **JEXL**.
 - Header values are pure JEXL. Static values are string literals
   (`"'application/json'"`); credentials come from `kv()` (encrypted store),
-  `secret()` (plain worker secret binding) or `secret_store()` (a Cloudflare
-  Secrets Store binding, e.g. `secret_store('ACME__API_KEY')`).
+  `secret()` (plain worker secret binding), `secret_store()` (a Cloudflare
+  Secrets Store binding, e.g. `secret_store('ACME__API_KEY')`), request-time
+  `jwt()` signing (Apple-style ES256/RS256), or `google_oauth()` service-account
+  exchange.
 - The whole config is managed at runtime through the **admin API**. In live-KV
   mode (default) writes take effect immediately; in snapshot mode (compiled
   registry in the bundle — zero KV reads on the hot path) writes land in the
@@ -242,7 +244,12 @@ so bad expressions surface before any request.
 - `secret_store('NAME')` — a Cloudflare Secrets Store binding
   (`env.NAME.get()`), fail-closed if the binding has no `.get()`.
 - Built-in helpers (reserved; cannot be shadowed): `base64`, `base64url`,
-  `json`, `upper`, `lower`, `trim`, `urlencode`.
+  `json`, `upper`, `lower`, `trim`, `urlencode`, `jwt`, `google_oauth`.
+- `jwt({alg, key, claims[, kid, typ, ttl]})` — compact JWS via WebCrypto.
+  `iat`/`exp` default to now/now+ttl unless set in claims.
+- `google_oauth({account, scope[, ttl]})` — service-account JSON exchange at
+  `oauth2.googleapis.com/token`; access token cached in-isolate until expiry
+  minus skew.
 - `variable('NAME')` — a plain-text env value (non-secret config), coerced to
   string.
 - `process_env('NAME')` — host `process.env[NAME]`, for the standalone Node/Bun

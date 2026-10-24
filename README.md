@@ -171,13 +171,17 @@ Stripe stays broad, Razorpay is read-only — on the same key. Mint at
 
 ### Injecting secrets
 
-Header values are JEXL expressions. Five helpers, picked per deployment:
+Header values are JEXL expressions. Seven helpers, picked per deployment:
 
 - `kv('NAME')` — hodor's own encrypted KV store. Portable, works everywhere.
 - `secret('NAME')` — plain worker secret binding. Zero extra dependencies.
 - `secret_store('NAME')` — Cloudflare Secrets Store. Strongest isolation.
 - `variable('NAME')` — plain-text env var. IDs, usernames, account IDs — never secrets.
 - `process_env('NAME')` — host `process.env`. Standalone Node/Bun only.
+- `jwt({alg, key, claims[, kid, typ, ttl]})` — request-time ES256/RS256 JWS via WebCrypto
+  (PKCS8 PEM, `iat`/`exp` injected). Apple App Store Server API with no refresher cron.
+- `google_oauth({account, scope[, ttl]})` — service-account JWT-bearer exchange,
+  token cached in-isolate. Google Play Developer API with no refresher cron.
 
 Rule: passwords/tokens/keys → secrets; IDs/usernames → `vars` + `variable()`.
 Example: `'Bearer ' + kv('OPENAI_API_KEY')`. Reserved helper names can't be

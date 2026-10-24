@@ -63,8 +63,11 @@ Then `cd ../my-proxy && npx wrangler deploy`.
   (Cloudflare Secrets Store) entries added per deployment.
 - Header templates are JEXL: `kv('NAME')` (encrypted store),
   `secret('NAME')` (plain worker secret binding), `secret_store('NAME')`
-  (Secrets Store binding via `env.NAME.get()`), `process_env('NAME')` (host
-  `process.env`, standalone Node/Bun only); reserved helpers can't be
+  (Secrets Store binding via `env.NAME.get()`), `variable('NAME')` (plain-text
+  env, standalone-safe), `process_env('NAME')` (host `process.env`,
+  standalone Node/Bun only), plus request-time `jwt({alg, key, claims...})`
+  (ES256/RS256 via WebCrypto) and `google_oauth({account, scope})`
+  (service-account exchange, cached); reserved helpers can't be
   shadowed (see `src/lib/engine.ts`). Registry items may carry
   `identifiers` — non-secret consumer facts (project/zone IDs, datasets,
   region) surfaced verbatim in `/_/reflection` (see `src/lib/schema.ts`).
